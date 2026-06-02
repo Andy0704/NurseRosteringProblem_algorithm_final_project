@@ -8,12 +8,13 @@
 #include "heuristic.h"
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: nrp_heuristic <path/to/problem_exchange.json>\n";
+    if (argc < 2 || argc > 3) {
+        std::cerr << "Usage: nrp_heuristic <input.json> [output.json]\n";
         return EXIT_FAILURE;
     }
 
     const std::string filepath(argv[1]);
+    const std::string outpath(argc == 3 ? argv[2] : argv[1]);
 
     nlohmann::json data;
     {
@@ -47,14 +48,14 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        std::ofstream fout(filepath);
+        std::ofstream fout(outpath);
         if (!fout.is_open()) {
-            std::cerr << "Error: cannot write result to: " << filepath << "\n";
+            std::cerr << "Error: cannot write result to: " << outpath << "\n";
             return EXIT_FAILURE;
         }
         fout << result.dump(2) << "\n";
     }
 
-    std::cerr << "[nrp_heuristic] Result written to: " << filepath << "\n";
+    std::cerr << "[nrp_heuristic] Result written to: " << outpath << "\n";
     return EXIT_SUCCESS;
 }

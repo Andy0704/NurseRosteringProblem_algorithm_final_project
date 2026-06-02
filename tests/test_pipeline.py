@@ -151,3 +151,30 @@ def test_multi_week_runner_n005w4():
 
     accumulated = sum(r["total"] for r in results)
     assert accumulated >= 0, f"Accumulated total must be non-negative, got {accumulated}"
+
+
+def test_look_ahead_motivation():
+    """Baseline: myopic (week-by-week) MILP produces higher penalty in later weeks.
+
+    Why: INRC-II's consecutive-count constraints span week boundaries — a
+    locally-optimal schedule in week k can tighten the feasible region for
+    week k+1, raising its penalty. This test captures the observed Week2 > Week0
+    pattern (150 vs 60 under H0 variant 0) as a documented baseline.
+
+    Future: once a look-ahead planner is implemented, replace the assertion
+    direction:  assert results[2]["total"] <= results[0]["total"]
+    to confirm that look-ahead reduces the accumulated cost.
+    """
+    from outer_milp.utils.multi_week_runner import run
+
+    results = run(INSTANCE_DIR, weeks=[0, 1, 2, 3], history_variant=0, time_limit=30)
+
+    assert len(results) == 4
+    week0_total = results[0]["total"]
+    week2_total = results[2]["total"]
+
+    assert week2_total > week0_total, (
+        f"Myopic baseline: expected Week2 penalty ({week2_total}) > "
+        f"Week0 penalty ({week0_total}). If this fails, the myopic accumulation "
+        f"pattern has changed — verify solver output before removing this baseline."
+    )

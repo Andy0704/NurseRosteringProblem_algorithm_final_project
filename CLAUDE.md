@@ -105,3 +105,12 @@ NRP_Claude_Agent/
 - Run tests: python3 -m pytest tests/ -v
 - Multi-week: python3 outer_milp/utils/multi_week_runner.py --instance data/raw_inrc2/testdatasets_json/n005w4
 - Full pipeline: python3 outer_milp/main.py --config config.json
+
+## Git Setup (run once per new WSL environment)
+git config user.email "candy070405@gmail.com"
+git config user.name "andy0704"
+
+## Git Workflow
+- Before any major change: git add -A && git commit -m "checkpoint: <description>"
+- Check what changed: git diff HEAD
+- Revert last change: git checkout -- <file>
