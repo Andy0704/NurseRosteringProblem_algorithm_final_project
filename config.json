@@ -1,0 +1,8 @@
+{
+  "instance_dir": "data/raw_inrc2/testdatasets_json/n005w4",
+  "week": 0,
+  "output_dir": "data/exchange",
+  "max_iterations": 3,
+  "time_limit_seconds": 30,
+  "heuristic_binary": "inner_heuristic/build/nrp_heuristic"
+}
