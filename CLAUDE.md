@@ -114,3 +114,21 @@ git config user.name "andy0704"
 - Before any major change: git add -A && git commit -m "checkpoint: <description>"
 - Check what changed: git diff HEAD
 - Revert last change: git checkout -- <file>
+
+## Session Lifecycle Rules
+
+**SESSION START** — 每次新 session 的第一件事：
+1. Read PROJECT_STATUS.md
+2. Read CLAUDE.md
+3. 用 PROJECT_STATUS.md 中的 Component Status 和 Next Steps 作為主要上下文
+4. 不需要 scan 所有檔案，除非 task 明確需要
+
+**SESSION END / TASK COMPLETE** — 每次任務完成或中斷前：
+1. 更新 PROJECT_STATUS.md（surgical edit only）：
+   - 修改 Last Updated（時間 + session 名稱）
+   - 只更新本次有變動的 Component Status 列
+   - 在 Recent Changes 最頂端 prepend 一行（格式：[YYYY-MM-DD] type: 描述）
+   - 勾選已完成的 Next Steps，新增新發現的待辦
+   - 若發現新問題，append 到 Known Issues
+2. git add PROJECT_STATUS.md && git commit -m "chore: update project status"
+3. 禁止重寫整個 PROJECT_STATUS.md；只能修改變動的行

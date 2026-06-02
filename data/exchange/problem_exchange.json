@@ -11,15 +11,26 @@
       "minimumNumberOfConsecutiveDaysOff": 2,
       "minimumNumberOfConsecutiveWorkingDays": 3
     },
+    "HalfTime": {
+      "completeWeekends": 1,
+      "id": "HalfTime",
+      "maximumNumberOfAssignments": 11,
+      "maximumNumberOfConsecutiveDaysOff": 5,
+      "maximumNumberOfConsecutiveWorkingDays": 5,
+      "maximumNumberOfWorkingWeekends": 1,
+      "minimumNumberOfAssignments": 7,
+      "minimumNumberOfConsecutiveDaysOff": 3,
+      "minimumNumberOfConsecutiveWorkingDays": 3
+    },
     "PartTime": {
       "completeWeekends": 1,
       "id": "PartTime",
-      "maximumNumberOfAssignments": 11,
+      "maximumNumberOfAssignments": 15,
       "maximumNumberOfConsecutiveDaysOff": 5,
       "maximumNumberOfConsecutiveWorkingDays": 5,
       "maximumNumberOfWorkingWeekends": 2,
       "minimumNumberOfAssignments": 7,
-      "minimumNumberOfConsecutiveDaysOff": 3,
+      "minimumNumberOfConsecutiveDaysOff": 2,
       "minimumNumberOfConsecutiveWorkingDays": 3
     }
   },
@@ -27,33 +38,87 @@
     [
       0,
       0,
-      2,
       3,
       3,
-      3,
-      3
-    ],
-    [
-      2,
-      2,
-      0,
-      0,
-      1,
-      1,
-      2
-    ],
-    [
-      1,
-      1,
-      1,
-      2,
       3,
       0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      1,
+      1,
+      4,
+      4
+    ],
+    [
+      4,
+      4,
+      0,
+      0,
+      0,
+      3,
+      3
+    ],
+    [
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      4
+    ],
+    [
+      3,
+      3,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      4
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      4,
+      4,
+      4
+    ],
+    [
+      4,
+      4,
+      4,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      4,
+      0,
+      0,
+      1,
       2,
       3,
+      4
+    ],
+    [
+      2,
+      0,
       0,
       0,
       0,
@@ -61,21 +126,113 @@
       3
     ],
     [
-      1,
-      3,
-      3,
       0,
       2,
       2,
-      3
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      3,
+      4,
+      4,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      2,
+      1,
+      1,
+      2,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      4
+    ],
+    [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0
+    ],
+    [
+      2,
+      2,
+      1,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      3,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      1,
+      3,
+      4,
+      4,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      2
+    ],
+    [
+      1,
+      3,
+      4,
+      4,
+      0,
+      0,
+      0
     ]
   ],
   "metadata": {
+    "final_cost": 1720,
     "history_variant": 0,
-    "instance_id": "n005w4",
+    "initial_cost": 1725,
+    "instance_id": "n021w4",
     "num_days": 7,
-    "num_nurses": 5,
-    "num_shift_types": 4,
+    "num_nurses": 21,
+    "num_shift_types": 5,
     "week": 0
   },
   "nurse_info": [
@@ -83,21 +240,160 @@
       "contract_id": "FullTime",
       "history": {
         "consecutive_days_off": 0,
-        "consecutive_working_days": 4,
+        "consecutive_working_days": 5,
+        "last_shift_index": 4,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 3,
+        "num_working_weekends": 0
+      },
+      "id": "HN_0",
+      "index": 0,
+      "skills": [
+        "HeadNurse",
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 2,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "HN_1",
+      "index": 1,
+      "skills": [
+        "HeadNurse",
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 2,
         "last_shift_index": 3,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 2,
+        "num_working_weekends": 0
+      },
+      "id": "HN_2",
+      "index": 2,
+      "skills": [
+        "HeadNurse",
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 1,
+        "last_shift_index": 1,
         "num_assignments": 0,
         "num_consecutive_shift_assignments": 1,
         "num_working_weekends": 0
       },
-      "id": "Patrick",
-      "index": 0,
+      "id": "NU_3",
+      "index": 3,
       "skills": [
-        "HeadNurse",
-        "Nurse"
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 2,
+        "last_shift_index": 2,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 2,
+        "num_working_weekends": 0
+      },
+      "id": "NU_4",
+      "index": 4,
+      "skills": [
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 2,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 3,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "NU_5",
+      "index": 5,
+      "skills": [
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 4,
+        "last_shift_index": 3,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 4,
+        "num_working_weekends": 0
+      },
+      "id": "NU_6",
+      "index": 6,
+      "skills": [
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 2,
+        "last_shift_index": 4,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 2,
+        "num_working_weekends": 0
+      },
+      "id": "NU_7",
+      "index": 7,
+      "skills": [
+        "Nurse",
+        "Caretaker"
       ]
     },
     {
       "contract_id": "FullTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 4,
+        "last_shift_index": 4,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 4,
+        "num_working_weekends": 0
+      },
+      "id": "NU_8",
+      "index": 8,
+      "skills": [
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
       "history": {
         "consecutive_days_off": 0,
         "consecutive_working_days": 3,
@@ -106,11 +402,108 @@
         "num_consecutive_shift_assignments": 3,
         "num_working_weekends": 0
       },
-      "id": "Andrea",
-      "index": 1,
+      "id": "NU_9",
+      "index": 9,
       "skills": [
-        "HeadNurse",
-        "Nurse"
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 3,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "NU_10",
+      "index": 10,
+      "skills": [
+        "Nurse",
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 2,
+        "last_shift_index": 3,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 2,
+        "num_working_weekends": 0
+      },
+      "id": "CT_11",
+      "index": 11,
+      "skills": [
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 2,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "CT_12",
+      "index": 12,
+      "skills": [
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 3,
+        "last_shift_index": 2,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 1,
+        "num_working_weekends": 0
+      },
+      "id": "CT_13",
+      "index": 13,
+      "skills": [
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 3,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "CT_14",
+      "index": 14,
+      "skills": [
+        "Caretaker"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 2,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "CT_15",
+      "index": 15,
+      "skills": [
+        "Caretaker"
       ]
     },
     {
@@ -123,11 +516,42 @@
         "num_consecutive_shift_assignments": 0,
         "num_working_weekends": 0
       },
-      "id": "Stefaan",
-      "index": 2,
+      "id": "TR_16",
+      "index": 16,
       "skills": [
-        "HeadNurse",
-        "Nurse"
+        "Trainee"
+      ]
+    },
+    {
+      "contract_id": "HalfTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 2,
+        "last_shift_index": 2,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 1,
+        "num_working_weekends": 0
+      },
+      "id": "TR_17",
+      "index": 17,
+      "skills": [
+        "Trainee"
+      ]
+    },
+    {
+      "contract_id": "FullTime",
+      "history": {
+        "consecutive_days_off": 2,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "TR_18",
+      "index": 18,
+      "skills": [
+        "Trainee"
       ]
     },
     {
@@ -135,53 +559,83 @@
       "history": {
         "consecutive_days_off": 0,
         "consecutive_working_days": 4,
-        "last_shift_index": 2,
+        "last_shift_index": 3,
         "num_assignments": 0,
-        "num_consecutive_shift_assignments": 1,
+        "num_consecutive_shift_assignments": 2,
         "num_working_weekends": 0
       },
-      "id": "Sara",
-      "index": 3,
+      "id": "TR_19",
+      "index": 19,
       "skills": [
-        "Nurse"
+        "Trainee"
       ]
     },
     {
-      "contract_id": "FullTime",
+      "contract_id": "PartTime",
       "history": {
-        "consecutive_days_off": 1,
+        "consecutive_days_off": 2,
         "consecutive_working_days": 0,
         "last_shift_index": 0,
         "num_assignments": 0,
         "num_consecutive_shift_assignments": 0,
         "num_working_weekends": 0
       },
-      "id": "Nguyen",
-      "index": 4,
+      "id": "TR_20",
+      "index": 20,
       "skills": [
-        "Nurse"
+        "Trainee"
       ]
     }
   ],
   "requirements": {
     "demand_by_skill": {
+      "Caretaker": [
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
+        ]
+      ],
       "HeadNurse": [
         [
           1,
-          1,
-          0
-        ],
-        [
-          0,
-          0,
-          1
-        ],
-        [
-          0,
-          1,
-          0
-        ],
-        [
           0,
           0,
           0
@@ -189,14 +643,35 @@
         [
           0,
           0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
           1
         ],
         [
           1,
           0,
-          1
+          0,
+          0
         ],
         [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
           0,
           0,
           0
@@ -206,95 +681,183 @@
         [
           1,
           1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "Trainee": [
+        [
+          1,
+          1,
+          1,
           0
         ],
         [
           1,
           1,
-          1
-        ],
-        [
-          1,
           0,
-          1
+          0
         ],
         [
           0,
           0,
-          1
+          1,
+          0
         ],
         [
           1,
           1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
           1
         ],
         [
+          1,
           1,
           1,
           0
         ],
         [
           0,
-          1,
-          1
+          0,
+          0,
+          0
         ]
       ]
     },
     "demand_matrix": [
       [
+        4,
+        3,
         2,
-        2,
-        0
-      ],
-      [
-        1,
-        1,
         2
       ],
       [
-        1,
-        1,
-        1
-      ],
-      [
-        0,
-        0,
-        1
-      ],
-      [
-        1,
-        1,
+        3,
+        3,
+        2,
         2
       ],
       [
         2,
         1,
-        1
+        3,
+        3
       ],
       [
-        0,
+        4,
+        3,
+        2,
+        2
+      ],
+      [
+        2,
+        2,
+        2,
+        2
+      ],
+      [
+        3,
+        2,
+        3,
+        2
+      ],
+      [
         1,
+        1,
+        2,
         1
       ]
     ],
     "optimal_by_skill": {
+      "Caretaker": [
+        [
+          2,
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          1,
+          2,
+          1
+        ],
+        [
+          1,
+          0,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          1,
+          1,
+          2
+        ],
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          2,
+          0
+        ]
+      ],
       "HeadNurse": [
         [
           1,
-          1,
-          0
-        ],
-        [
-          0,
-          1,
-          1
-        ],
-        [
-          0,
-          1,
-          0
-        ],
-        [
           0,
           0,
           0
@@ -302,14 +865,35 @@
         [
           0,
           0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
           1
         ],
         [
           1,
           0,
-          1
+          0,
+          0
         ],
         [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
           0,
           0,
           0
@@ -317,16 +901,7 @@
       ],
       "Nurse": [
         [
-          2,
           1,
-          1
-        ],
-        [
-          1,
-          1,
-          1
-        ],
-        [
           1,
           1,
           1
@@ -334,22 +909,82 @@
         [
           1,
           1,
-          1
-        ],
-        [
-          1,
           1,
           1
         ],
         [
           1,
           1,
+          1,
           1
         ],
         [
           1,
           1,
+          1,
           1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "Trainee": [
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0
         ]
       ]
     }
@@ -368,15 +1003,22 @@
       "name": "Early"
     },
     {
-      "id": "Late",
+      "id": "Day",
       "index": 2,
-      "max_consecutive": 3,
+      "max_consecutive": 28,
+      "min_consecutive": 2,
+      "name": "Day"
+    },
+    {
+      "id": "Late",
+      "index": 3,
+      "max_consecutive": 5,
       "min_consecutive": 2,
       "name": "Late"
     },
     {
       "id": "Night",
-      "index": 3,
+      "index": 4,
       "max_consecutive": 5,
       "min_consecutive": 4,
       "name": "Night"
@@ -384,35 +1026,115 @@
   ],
   "shift_off_requests": [
     {
+      "day": "Tuesday",
+      "nurse": "CT_13",
+      "shiftType": "Night"
+    },
+    {
+      "day": "Tuesday",
+      "nurse": "NU_8",
+      "shiftType": "Night"
+    },
+    {
+      "day": "Wednesday",
+      "nurse": "CT_12",
+      "shiftType": "Night"
+    },
+    {
+      "day": "Wednesday",
+      "nurse": "NU_9",
+      "shiftType": "Any"
+    },
+    {
       "day": "Thursday",
-      "nurse": "Sara",
+      "nurse": "HN_1",
+      "shiftType": "Day"
+    },
+    {
+      "day": "Thursday",
+      "nurse": "TR_17",
+      "shiftType": "Any"
+    },
+    {
+      "day": "Friday",
+      "nurse": "HN_2",
+      "shiftType": "Any"
+    },
+    {
+      "day": "Friday",
+      "nurse": "NU_7",
+      "shiftType": "Any"
+    },
+    {
+      "day": "Friday",
+      "nurse": "NU_9",
+      "shiftType": "Any"
+    },
+    {
+      "day": "Friday",
+      "nurse": "TR_16",
+      "shiftType": "Day"
+    },
+    {
+      "day": "Saturday",
+      "nurse": "CT_13",
+      "shiftType": "Day"
+    },
+    {
+      "day": "Saturday",
+      "nurse": "CT_14",
       "shiftType": "Any"
     },
     {
       "day": "Saturday",
-      "nurse": "Sara",
-      "shiftType": "Night"
+      "nurse": "HN_0",
+      "shiftType": "Any"
     },
     {
       "day": "Saturday",
-      "nurse": "Stefaan",
+      "nurse": "TR_18",
+      "shiftType": "Day"
+    },
+    {
+      "day": "Sunday",
+      "nurse": "CT_14",
+      "shiftType": "Late"
+    },
+    {
+      "day": "Sunday",
+      "nurse": "CT_15",
+      "shiftType": "Day"
+    },
+    {
+      "day": "Sunday",
+      "nurse": "NU_3",
+      "shiftType": "Late"
+    },
+    {
+      "day": "Sunday",
+      "nurse": "TR_19",
       "shiftType": "Late"
     }
   ],
   "shift_type_constraints": {
     "forbidden_successions": {
+      "Day": [],
       "Early": [],
       "Late": [
-        "Early"
+        "Early",
+        "Day"
       ],
       "Night": [
         "Early",
+        "Day",
         "Late"
       ]
     }
   },
   "skills": [
     "HeadNurse",
-    "Nurse"
+    "Nurse",
+    "Caretaker",
+    "Trainee"
   ]
 }

@@ -1,8 +1,8 @@
 {
-  "instance_dir": "data/raw_inrc2/testdatasets_json/n005w4",
-  "week": 0,
-  "output_dir": "data/exchange",
+  "exchange_path": "data/exchange/problem_exchange.json",
+  "binary_path": "inner_heuristic/build/nrp_heuristic",
   "max_iterations": 3,
-  "time_limit_seconds": 30,
-  "heuristic_binary": "inner_heuristic/build/nrp_heuristic"
+  "fo_num_free": 2,
+  "fo_passes": 1,
+  "fo_time_limit": 15
 }

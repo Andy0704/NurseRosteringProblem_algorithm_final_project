@@ -328,7 +328,14 @@ static int deltaTwoWaySwap(const Problem& prob,
 
     std::swap(sched[n1][d], sched[n2][d]);
 
-    int new_partial = coverageCostDay(prob, sched, d)
+    // Hard coverage check: reject if swap creates any demand deficit on day d
+    int new_cov = coverageCostDay(prob, sched, d);
+    if (new_cov > 0) {
+        std::swap(sched[n1][d], sched[n2][d]); // revert
+        return 999999;
+    }
+
+    int new_partial = new_cov
                     + nurseCostFull(prob, sched, n1)
                     + nurseCostFull(prob, sched, n2);
 
@@ -352,7 +359,14 @@ static int deltaRandomDayOff(const Problem& prob,
     const int old_shift = sched[n][d];
     sched[n][d] = 0;
 
-    int new_partial = coverageCostDay(prob, sched, d)
+    // Hard coverage check: reject if day-off creates any demand deficit on day d
+    int new_cov = coverageCostDay(prob, sched, d);
+    if (new_cov > 0) {
+        sched[n][d] = old_shift; // revert
+        return 999999;
+    }
+
+    int new_partial = new_cov
                     + nurseCostFull(prob, sched, n);
 
     sched[n][d] = old_shift; // revert
