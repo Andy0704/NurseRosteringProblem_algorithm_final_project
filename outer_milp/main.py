@@ -55,6 +55,9 @@ def main() -> None:
     exchange_path = config.get("exchange_path", "data/exchange/problem_exchange.json")
     binary_path = config.get("binary_path", "inner_heuristic/build/nrp_heuristic")
     max_iterations = config.get("max_iterations", 1)
+    fo_num_free = config.get("fo_num_free", 2)
+    fo_passes = config.get("fo_passes", 1)
+    fo_time_limit = config.get("fo_time_limit", 15)
 
     data = load_problem(exchange_path)
     validate(data)
@@ -62,6 +65,8 @@ def main() -> None:
     for iteration in range(1, max_iterations + 1):
         print(f"[main] Iteration {iteration}/{max_iterations}")
 
+        # ── MILP full solve ───────────────────────────────────────────────────
+        penalty = float("inf")
         try:
             model = MilpModel(data)
             model.build()
@@ -72,6 +77,26 @@ def main() -> None:
         except NotImplementedError as exc:
             print(f"[STUB] MILP step skipped: {exc}", file=sys.stderr)
 
+        # ── Fix-and-Optimize passes ───────────────────────────────────────────
+        N = data["metadata"]["num_nurses"]
+        for fo_pass in range(1, fo_passes + 1):
+            for i in range(0, N - fo_num_free + 1, fo_num_free):
+                free = list(range(i, i + fo_num_free))
+                fo_model = MilpModel(data)
+                new_sched, new_penalty, accepted = fo_model.fix_and_optimize(
+                    free, penalty, time_limit=fo_time_limit
+                )
+                tag = "ACCEPTED" if accepted else "REJECTED"
+                print(
+                    f"[F&O]  iter={iteration} pass={fo_pass} "
+                    f"free={free} penalty={new_penalty:.2f} [{tag}]"
+                )
+                if accepted:
+                    penalty = new_penalty
+                    data["current_schedule"] = new_sched
+                    save_problem(data, exchange_path)
+
+        # ── C++ heuristic ─────────────────────────────────────────────────────
         try:
             _run_heuristic(binary_path, exchange_path)
         except FileNotFoundError:

@@ -319,8 +319,34 @@ class MilpModel:
             for n in range(N)
         ]
         penalty = float(obj_val)
+        self._schedule = schedule_matrix
         self._data["current_schedule"] = schedule_matrix
         return schedule_matrix, penalty
+
+    def fix_and_optimize(
+        self, free_indices: list, current_penalty: float, time_limit: int = 15
+    ) -> tuple:
+        """Fix all nurses except free_indices, solve sub-model, accept if improved.
+
+        Rebuilds the model from scratch so variable bounds are clean.
+        Returns (schedule_matrix, penalty, accepted: bool).
+        """
+        N = self._meta["num_nurses"]
+        original_sched = [row[:] for row in self._schedule]
+        fixed = [n for n in range(N) if n not in set(free_indices)]
+        self.build()
+        self.fix_nurses(fixed)
+        try:
+            new_sched, new_penalty = self.solve(time_limit=time_limit)
+        except RuntimeError:
+            self._schedule = original_sched
+            self._data["current_schedule"] = original_sched
+            return original_sched, current_penalty, False
+        if new_penalty < current_penalty:
+            return new_sched, new_penalty, True
+        self._schedule = original_sched
+        self._data["current_schedule"] = original_sched
+        return original_sched, current_penalty, False
 
     def fix_nurses(self, indices: list) -> None:
         """Fix nurses at the given indices to their current_schedule values.
