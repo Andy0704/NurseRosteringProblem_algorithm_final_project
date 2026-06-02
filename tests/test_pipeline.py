@@ -178,3 +178,24 @@ def test_look_ahead_motivation():
         f"Week0 penalty ({week0_total}). If this fails, the myopic accumulation "
         f"pattern has changed — verify solver output before removing this baseline."
     )
+
+
+def test_milp_coverage_skill_feasible():
+    """MILP solve() output must satisfy skill-specific coverage (S1_coverage == 0).
+
+    WHY: MILP was reporting penalty=0.00 while evaluate() showed S1_coverage=330
+    because H2 only checked aggregate nurse counts, not per-skill counts. This test
+    guards against regression of that bug.
+    """
+    from outer_milp.utils.inrc2_parser import parse
+    from outer_milp.utils.penalty_evaluator import evaluate
+    from outer_milp.models import MilpModel
+
+    data = parse("data/raw_inrc2/testdatasets_json/n005w4", week=0, history=0)
+    model = MilpModel(data)
+    model.build()
+    sched, _ = model.solve()
+    result = evaluate(sched, data)
+    assert result["S1_coverage"] == 0, (
+        f"MILP output violates skill-specific coverage: S1={result['S1_coverage']}"
+    )

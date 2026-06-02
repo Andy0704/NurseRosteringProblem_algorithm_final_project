@@ -19,7 +19,7 @@ _REQUIRED_KEYS = frozenset(
 
 class MilpModel:
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict, next_week_data: dict | None = None) -> None:
         missing = _REQUIRED_KEYS - data.keys()
         if missing:
             raise KeyError(
@@ -30,6 +30,9 @@ class MilpModel:
         self._nurses = data["nurse_info"]
         self._shifts = data["shift_mapping"]
         self._schedule = data["current_schedule"]
+        self._next_week_data = next_week_data
+        self._week_days = self._meta["num_days"]          # always 7
+        self._full_days = self._week_days * 2 if next_week_data else self._week_days
         self._model = None
         self._x = None
 
@@ -70,6 +73,7 @@ class MilpModel:
         contracts = self._data.get("contracts", {})
 
         # INRC-II soft constraint weights (Ceschia et al. 2019)
+        W_COVERAGE = 30 # skill-specific coverage deficit
         W_CONSEC = 15   # consecutive shift/working-day violations
         W_OFF = 30      # consecutive days-off violations
         W_ASSIGN = 15   # total assignment count deviation
@@ -98,14 +102,18 @@ class MilpModel:
                     f"H1_{n}_{d}",
                 )
 
-        # H2: minimum coverage per day per work shift
-        # demand[d][ws] is the minimum head-count for work_shifts[ws] on day d
-        for d in range(D):
-            for ws, s in enumerate(work_shifts):
-                model += (
-                    pulp.lpSum(x[n][d][s] for n in range(N)) >= demand[d][ws],
-                    f"H2_{d}_{s}",
-                )
+        # H2: aggregate hard coverage — used only when no per-skill demand data.
+        # When demand_by_skill is available, coverage is enforced as a soft
+        # constraint (see S_coverage block below) to avoid infeasibility when
+        # H3 boundary constraints block the only qualified nurse for a skill/shift.
+        skill_demands = self._data.get("requirements", {}).get("demand_by_skill", {})
+        if not skill_demands:
+            for d in range(D):
+                for ws, s in enumerate(work_shifts):
+                    model += (
+                        pulp.lpSum(x[n][d][s] for n in range(N)) >= demand[d][ws],
+                        f"H2_{d}_{s}",
+                    )
 
         # H3: forbidden shift successions within the week
         for n in range(N):
@@ -131,6 +139,29 @@ class MilpModel:
         penalty_terms = []  # (weight, LpVariable)
         nurse_id_to_idx = {n["id"]: n["index"] for n in self._nurses}
         SAT, SUN = 5, 6    # Saturday=day5, Sunday=day6 (0=Mon baseline)
+
+        # S_coverage: skill-specific coverage (weight=30, matches penalty_evaluator).
+        # Modelled as soft rather than hard to avoid infeasibility when H3 boundary
+        # constraints block the only qualified nurse for a required skill/shift slot.
+        if skill_demands:
+            nurse_has_skill = {
+                sk: [sk in nurse["skills"] for nurse in self._nurses]
+                for sk in skill_demands
+            }
+            for sk, sk_demand in skill_demands.items():
+                for d in range(D):
+                    for ws, s in enumerate(work_shifts):
+                        req = sk_demand[d][ws]
+                        if req <= 0:
+                            continue
+                        p = pulp.LpVariable(f"p_H2_{sk}_{d}_{s}", lowBound=0)
+                        penalty_terms.append((W_COVERAGE, p))
+                        model += (
+                            pulp.lpSum(
+                                x[n][d][s] for n in range(N) if nurse_has_skill[sk][n]
+                            ) + p >= req,
+                            f"H2_{sk}_{d}_{s}",
+                        )
 
         for n_idx, nurse in enumerate(self._nurses):
             contract = contracts.get(nurse["contract_id"], {})
