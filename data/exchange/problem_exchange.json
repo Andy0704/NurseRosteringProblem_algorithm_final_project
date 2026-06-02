@@ -1,0 +1,418 @@
+{
+  "contracts": {
+    "FullTime": {
+      "completeWeekends": 1,
+      "id": "FullTime",
+      "maximumNumberOfAssignments": 22,
+      "maximumNumberOfConsecutiveDaysOff": 3,
+      "maximumNumberOfConsecutiveWorkingDays": 5,
+      "maximumNumberOfWorkingWeekends": 2,
+      "minimumNumberOfAssignments": 15,
+      "minimumNumberOfConsecutiveDaysOff": 2,
+      "minimumNumberOfConsecutiveWorkingDays": 3
+    },
+    "PartTime": {
+      "completeWeekends": 1,
+      "id": "PartTime",
+      "maximumNumberOfAssignments": 11,
+      "maximumNumberOfConsecutiveDaysOff": 5,
+      "maximumNumberOfConsecutiveWorkingDays": 5,
+      "maximumNumberOfWorkingWeekends": 2,
+      "minimumNumberOfAssignments": 7,
+      "minimumNumberOfConsecutiveDaysOff": 3,
+      "minimumNumberOfConsecutiveWorkingDays": 3
+    }
+  },
+  "current_schedule": [
+    [
+      0,
+      0,
+      2,
+      3,
+      3,
+      3,
+      3
+    ],
+    [
+      2,
+      2,
+      0,
+      0,
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1,
+      2,
+      3,
+      0,
+      0
+    ],
+    [
+      2,
+      3,
+      0,
+      0,
+      0,
+      1,
+      3
+    ],
+    [
+      1,
+      3,
+      3,
+      0,
+      2,
+      2,
+      3
+    ]
+  ],
+  "metadata": {
+    "history_variant": 0,
+    "instance_id": "n005w4",
+    "num_days": 7,
+    "num_nurses": 5,
+    "num_shift_types": 4,
+    "week": 0
+  },
+  "nurse_info": [
+    {
+      "contract_id": "FullTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 4,
+        "last_shift_index": 3,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 1,
+        "num_working_weekends": 0
+      },
+      "id": "Patrick",
+      "index": 0,
+      "skills": [
+        "HeadNurse",
+        "Nurse"
+      ]
+    },
+    {
+      "contract_id": "FullTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 3,
+        "last_shift_index": 1,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 3,
+        "num_working_weekends": 0
+      },
+      "id": "Andrea",
+      "index": 1,
+      "skills": [
+        "HeadNurse",
+        "Nurse"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 3,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "Stefaan",
+      "index": 2,
+      "skills": [
+        "HeadNurse",
+        "Nurse"
+      ]
+    },
+    {
+      "contract_id": "PartTime",
+      "history": {
+        "consecutive_days_off": 0,
+        "consecutive_working_days": 4,
+        "last_shift_index": 2,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 1,
+        "num_working_weekends": 0
+      },
+      "id": "Sara",
+      "index": 3,
+      "skills": [
+        "Nurse"
+      ]
+    },
+    {
+      "contract_id": "FullTime",
+      "history": {
+        "consecutive_days_off": 1,
+        "consecutive_working_days": 0,
+        "last_shift_index": 0,
+        "num_assignments": 0,
+        "num_consecutive_shift_assignments": 0,
+        "num_working_weekends": 0
+      },
+      "id": "Nguyen",
+      "index": 4,
+      "skills": [
+        "Nurse"
+      ]
+    }
+  ],
+  "requirements": {
+    "demand_by_skill": {
+      "HeadNurse": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "Nurse": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ]
+    },
+    "demand_matrix": [
+      [
+        2,
+        2,
+        0
+      ],
+      [
+        1,
+        1,
+        2
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        2
+      ],
+      [
+        2,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ]
+    ],
+    "optimal_by_skill": {
+      "HeadNurse": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "Nurse": [
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  },
+  "shift_mapping": [
+    {
+      "id": "None",
+      "index": 0,
+      "is": "Off"
+    },
+    {
+      "id": "Early",
+      "index": 1,
+      "max_consecutive": 5,
+      "min_consecutive": 2,
+      "name": "Early"
+    },
+    {
+      "id": "Late",
+      "index": 2,
+      "max_consecutive": 3,
+      "min_consecutive": 2,
+      "name": "Late"
+    },
+    {
+      "id": "Night",
+      "index": 3,
+      "max_consecutive": 5,
+      "min_consecutive": 4,
+      "name": "Night"
+    }
+  ],
+  "shift_off_requests": [
+    {
+      "day": "Thursday",
+      "nurse": "Sara",
+      "shiftType": "Any"
+    },
+    {
+      "day": "Saturday",
+      "nurse": "Sara",
+      "shiftType": "Night"
+    },
+    {
+      "day": "Saturday",
+      "nurse": "Stefaan",
+      "shiftType": "Late"
+    }
+  ],
+  "shift_type_constraints": {
+    "forbidden_successions": {
+      "Early": [],
+      "Late": [
+        "Early"
+      ],
+      "Night": [
+        "Early",
+        "Late"
+      ]
+    }
+  },
+  "skills": [
+    "HeadNurse",
+    "Nurse"
+  ]
+}

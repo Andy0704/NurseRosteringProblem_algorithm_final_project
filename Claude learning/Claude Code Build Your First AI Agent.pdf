@@ -1,0 +1,4400 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 5807
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(00:00 Hey everybody, I'm Jamie. Welcome back to ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(Teachers Tech. So, in my last Claude Code video,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(00:05 we did something pretty cool. We built a full ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(bookmark dashboard app just by typing in plain  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(00:10 English. No coding experience needed. If you ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(haven't seen that one, I'll link it right up  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(00:15 here and down below in the description. Definitely ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(go watch that one first because today's video  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(00:20 builds on everything we covered there. But today, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(we're going to go way beyond building apps. Today,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(00:25 we're going to be building an AI agent. Let ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(me show you what I mean. Are you seeing this?  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(00:30 I typed one sentence and it started thinking on ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(its own. It broke the task into steps. It asked  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(00:35 me follow-up questions. It went out to gather ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(information, organized everything, and produced  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(00:40 a full report all by itself. Last time, Cloud ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(Code did what we told it to do. This time, we're  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(00:46 going to teach it to figure out things on its own. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(That's called an agentic workflow, and honestly,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(00:51 it's the most useful thing I've learned in AI this ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(year. Oh, and we're doing the whole thing inside  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(00:55 VS Code this time. way more comfortable than ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(the raw terminal like last time. Let's get into  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(01:00 it. All right, before we start building anything, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(let's talk about what an agentic workflow actually  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(01:08 is because it sounds way more complicated than it ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(really is. Think back to the last video. We told  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(01:13 Claude Code exactly what to build. We said, "Make ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(me a bookmark dashboard with search dark mode."  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(01:19 We gave it specific instructions and it followed ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(them. That was powerful, but we're still doing  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(01:24 all the thinking. We were directing every step. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(An agentic workflow flips that around. Let me  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(01:29 break it down into three levels so you can see the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(differences. Level one is chat. This is the most  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(01:35 basic way people use AI. You ask a question, you ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(get an answer. One and done. That's your standard  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(01:40 chat GPT or clawed conversation. Most people never ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(get past this level. Level two is building. This  ) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 5797
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(01:48 is what we did in the last video. You tell ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(the AI what you want to create. You guide the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(01:52 process step by step and it writes the code for ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(you. You're the director, the AI is the builder.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(01:57 It's way more powerful than just chatting, but ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(you're still making all the decisions. Level three  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(02:02 is agentic. And this is where things get really ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(interesting. Instead of telling the AI what to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(02:07 do step by step, you describe the goal. You say, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+("Here's what I need to accomplish." And the AI  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(02:13 figures out the steps on its own. It makes a plan, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(picks its tools, adapts when things don't go as  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(02:18 expected, and it will even ask you questions when ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(it's not sure about something. That's what we're  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(02:23 doing today. Here's the way I think about it. It's ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(like the difference between micromanaging a brand  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(02:28 new employee versus trusting an experienced one. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(In the last video, we were the manager saying,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(02:33 "Do this, then this, then this." Today, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(we're saying, "Here's the goal. Here's  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(02:38 what you have access to. Figure it out." That's a ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(completely different relationship with the AI. So  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(02:44 what specifically makes something agentic? Three ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(things. First, it follows a process. It's not just  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(02:50 answering a single question. It's working through ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(a whole series of steps to get a result. Second,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(02:55 it makes decisions. It chooses what to do based ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(on what it finds along the way. If one approach  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(03:00 isn't working, it pivots. If it finds something ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(unexpected, it adjusts. Third, it asks before it  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(03:06 assumes. Instead of guessing what you want, a good ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(aenic workflow will ask you clarifying questions  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(03:11 first. That one change alone makes the output ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(10 times better. And the use cases for this are  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(03:17 endless. You could use it to research a topic ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(across multiple sources and compile a report.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(03:22 Analyze a folder of files and organize them by ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(category. Draft personalize emails for a whole  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(03:27 list of contacts. Compare competitors and produce ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(a sidebyside breakdown. The pattern is always  ) Tj
+ET
+endstream
+endobj
+7 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 5827
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(03:32 the same. You give it the goal and it does the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(work. All right, let's get our tool set up. Now,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(03:37 last time we worked entirely in the terminal and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(that works, but VS Code gives us a much better  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(03:43 experience for what we're going to do today. You ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(can see your files, your code, and cloud code all  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(03:48 in the same place. When the agent is creating and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(editing multiple files, which it will be, having  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(03:54 that visual file explorer makes a huge difference. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(So, let's get this set up. This only takes about  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(03:59 2 minutes. If you don't have Visual Studio Code ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(on your computer, I'll put the link to this site  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(04:04 down below in the description. Then you can pick ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(what operating system you're working on. Today I'm  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(04:09 going to be on Windows, so I'm going to go ahead ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(and choose this and download this for my machine.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(04:15 Once you have it downloaded, go ahead open it up. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(Where I want you to go is right here to extensions  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(04:22 and you're going to type in just claude code ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(up here. And you're going to see that we can  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(04:26 install cloud code here. So I'm just going to go ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(ahead and click on this. I'm going to trust the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(04:31 publisher and this install. All right, it's all ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(ready to go. We have it installed. I can see the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(04:36 cloud code. I'm going to click on it to open. I'm ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(going to go and mark this as done. I'm just going  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(04:42 to go and close these extensions over here. I'll ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(just click on it again to give myself more room.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(04:47 Notice you can uh stretch these uh to whatever ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(you want that works best for your preferences.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(04:53 If you already installed Cloud Code from the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(last video, you're all set. The extension uses  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(04:57 the same installation. If you haven't installed it ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(yet, go watch that first video because we covered  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(05:02 the whole setup there. Let me give you a quick ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(orientation of VS Code. Over here on the left,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(05:07 we've got our file explorer. This is where you're ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(going to see every file the agent creates in real  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(05:13 time. Folders appearing, documents being written. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(It's really satisfying to watch. Over here, we  ) Tj
+ET
+endstream
+endobj
+9 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 10 0 R
+>>
+endobj
+10 0 obj
+<<
+/Length 5812
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(05:19 have our cloud code panel. This is where you talk ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(to the agent. You go down here, type your prompts,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(05:24 you see what it's thinking, and you watch it work. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(Now, let's create our project folder. I'm going to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(05:29 go ahead and create a new folder where we're going ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(to be working out of. I'm just going to click open  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(05:33 folder. And I haven't created one yet. If you know ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(what folder you want, you can go ahead and choose  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(05:37 that one. I'm going to go in my documents here. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(And I'm just going to create a brand new folder.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(05:43 And I'm going to go call it my first agent. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(Select folder. I'm just going to go back and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(05:48 click on clawed code here and new session just to ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(open that back up. And if I click on the explorer,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(05:55 you can see here's the folder that I just created. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(Now, there's a couple of features in VS Code that  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(06:01 are going to be really important for you today. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(First, you can see the files updating real time as  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(06:06 the agent works. Watch the file explorer. When the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(agent creates something, it just appears. Second,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(06:12 when the agent plans a multi-step task, you'll ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(see a to-do list pop up showing you exactly  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(06:17 what's going to do and where in the process. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(And here's the big one, planning mode. Press  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(06:22 shift plus tab and you'll toggle into planning ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(mode. In this mode, Claude Code thinks and plans  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(06:28 but doesn't actually change any files. It's like ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(a dry run. We're going to use this a lot today  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(06:32 because the key to aenic workflows is planning ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(before building. All right, our environment is  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(06:37 ready. Now, let's set up one more thing that's ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(really going to make all the difference. Okay,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(06:42 this is something I didn't cover in the first ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(video and it completely changes how claude code  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(06:46 works for you. It's a file called claude.md. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(And I'm not exaggerating when I say this is  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(06:52 the single most important thing you can set up. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(So, what is claw.md? It's a simple markdown file  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(06:57 that you put in your project folder. Claude code ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(reads it automatically every time it starts up.  ) Tj
+ET
+endstream
+endobj
+11 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 12 0 R
+>>
+endobj
+12 0 obj
+<<
+/Length 5813
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(07:03 Think of it like an onboarding document for a ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(new employee. It tells the agent who you are,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(07:07 what the project's about, and how you want things ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(done. Let's build one together right now. In VS  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(07:14 Code, I'm creating a new file in the root of our ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(project. I'll name it claude.md all caps. And now,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(07:21 let's fill it in section by section. Okay, the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(first section is going to be project context. And  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(07:26 this is going to tell the agent what the workspace ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(is for. So I am going to give it a heading right  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(07:31 here at the beginning. And to do this, use the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(pound key and then a space. And then you can just  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(07:36 type your heading. You'll notice how it turns ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(blue. I'm just going to give it a couple spaces  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(07:40 just so everything's easier to read and so I can ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(take a quick glance at and see what's happening.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(07:46 I'm going to go and put this. So for project ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(context, this is my AI agent workspace. I use it  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(07:52 for research, content creation, and productivity ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(workflows. I'm going to give it a couple spaces.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(07:57 Next is the about me. This is where you tell the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(agent about who you are, what what you care about.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(08:03 So, I'll give it again another header and give ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(it a couple spaces. And this is what I'm going  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(08:08 to put. I create content about technology and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(productivity. My audience is people who want  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(08:12 practical, nononsense tutorials. I prefer clear, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(jargon-free output. Now, the most important part,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(08:19 rules. This is where you set the guardrails. These ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(are the instructions the agent will follow every  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(08:24 single time. Let's give it a heading and a couple ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(spaces. And my rules are going to be listed with  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(08:30 dashes in front of them. So you can have a clear ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(list just like this. So always ask clarifying  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(08:37 questions before starting a complex task. Show ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(your plans and steps before executing. Keep  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(08:43 reports and summaries concise, bullet points over ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(paragraphs. Save all output files to the output  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(08:48 folder and site sources when doing research. And ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(finally, project structure. This tells the agent  ) Tj
+ET
+endstream
+endobj
+13 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 14 0 R
+>>
+endobj
+14 0 obj
+<<
+/Length 5833
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(08:55 where things go. And this is where I want things. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(I have my workflows. Workflow instruction files.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(09:01 My output are the finished deliverables. And ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(resources are the reference docs and templates.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(09:07 I'm just going to save this now by hitting ctrls ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(together. That took us about 2 minutes. But now,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(09:12 every single time you open Claude Code in this ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(folder, it already knows your preferences, your  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(09:16 rules, and exactly how you want things organized. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(No repeating yourself. Let me show you why this  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(09:22 matters so much. Now, I'm going to use the same ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(prompt, research remote work trends on the left  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(09:28 without claw.md. I made a separate folder with no ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(claw.md file in it. So, I get this generic wall  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(09:35 of text. You can see as it goes through, there's ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(not really much structure. I get one question just  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(09:40 about allowing something uh just kind of a data ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(dump. But on the right with the claw.md file,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(09:46 the agent's asking me many different questions ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(as it goes through it. Then it gives me organized  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(09:51 bullet list, clear sections, source cited, and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(save the file exactly where I told it to. Let's  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(09:58 take a look at this end file here. Here's the link ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(to the report, and it's in the output. Remember,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(10:03 I told it to uh go ahead and put it the finished ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(output in here. So, if I click on it, it brings  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(10:08 me to this. Now, you might be thinking, well, that ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(doesn't look very good. But there's a shortcut to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(10:13 see what it looks like. So, if you go to control, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(shift, and v uh together, when you click in here,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(10:19 if you press all those keys together, you get ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(the report, what it created for you. So, as I  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(10:24 go through it, you can see how much more detailed ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(uh this was. Here we have our key takeaways. we  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(10:31 have all of this information versus that that one ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(little short link that we had with the uh without  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(10:38 the claw.md file. And this is why the claw.md is ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(non-negotiable. 2 minutes of setup saves you hours  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(10:45 of frustration down the road. And here's something ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(that was just added to claude code that makes this  ) Tj
+ET
+endstream
+endobj
+15 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 16 0 R
+>>
+endobj
+16 0 obj
+<<
+/Length 5830
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(10:50 even more powerful. Automatic memory. As the agent ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(works through your project, it now automatically  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(10:56 records things it learns and recalls them in the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(future sessions. So, it's just not reading your  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(11:01 claw.md at startup anymore. It's also building its ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(own understanding of your project over time. The  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(11:07 more you use it in this folder, the smarter it ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(gets about your preferences and how things are  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(11:11 organized. Before we start building our agent, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(I want to give you the mental model. There are  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(11:16 three pieces that make agendic workflows work. And ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(once you understand them, everything else clicks  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(11:21 into place. Layer one, workflows. These are just ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(plain English files that describe a process step  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(11:26 by step. Think of them like a recipe. The agent ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(reads the recipe and follows it, but it's smart  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(11:31 enough to adapt if anything's off. Workflows live ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(as a simple markdown file in your project. Nothing  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(11:37 fancy. Layer two, the agent. This is just ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(cloud code itself. It reads your workflows,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(11:42 thinks through the steps, and makes decisions. You ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(don't program the agent. You don't write the code  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(11:47 for it. You just give it clear instructions and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(let it reason. Layer three tools. These are what  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(11:52 the agent uses to actually get things done. Out ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(of the box, Claude Code can read and write files,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(11:57 run terminal commands, and search the web. That's ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(right. Web search is built right in. No extra  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(12:02 setup needed. The agent can go out, find current ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(information, and bring it back into your project.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(12:08 Now, you can also connect external services like ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(Gmail, Notion, and databases using something  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(12:13 called MCP. That's model context protocol. That ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(opens up a whole world of possibilities, and we'll  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(12:19 cover that in depth in the next video. But for ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(today, the built-in tools are more than enough for  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(12:25 everything we're doing. And here's the key insight ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(that most people miss. Most people skip straight  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(12:29 to the fancy tools and plugins. But the real power ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(is writing good workflows. A well-written workflow  ) Tj
+ET
+endstream
+endobj
+17 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 18 0 R
+>>
+endobj
+18 0 obj
+<<
+/Length 5819
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(12:35 with basic tools will outperform a sloppy ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(prompt with every plug-in in the world. The  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(12:40 workflow is where the magic lives. Okay, enough ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(theory. Let's build our first agent. All right,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(12:45 I'm in our empty project. You can see I just have ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(the claw.md file that we created. I deleted those  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(12:51 other test folders when I ran through that quick ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(test. The uh first thing we're going to do is go  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(12:56 and change it to plan mode. So, when I'm inside ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(the chat down here, I'm just going to press shift  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(13:01 and tab. But notice if I press it once, it goes ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(to edit automatically. I need to press it one  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(13:06 more time, it brings me to plan mode. If I press ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(it again, it brings me back to where I was. So,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(13:11 two times pressing shift and tap brings me over ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(to plan mode. Now, plan mode means Cloud Code will  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(13:16 think and plan, but won't change any files. We're ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(going to design our workflow before building it.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(13:21 Always plan first. Now, I'm going to describe what ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(I want. And watch carefully. I'm not giving it  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(13:27 step-by-step instructions. I'm describing my goal. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(And this is what I'm going to say. I want to build  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(13:33 a workflow where I can give you a topic. You'll ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(research it thoroughly, organize the findings,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(13:38 and produce a clean, structured report. Before you ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(start researching, you should ask me clarifying  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(13:42 questions about the scope, the audience, and what ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(I specifically want to know. I'm going to submit.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(13:49 Look at this. I gave it a goal and it's already ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(breaking it down into steps. It's thinking about  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(13:55 what the workflow needs. A clarifying question ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(phase, a research phase, a synthesis phase,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(14:01 an output phase. It's even suggesting quality ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(checks. That's the agendic thinking and action.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(14:07 I didn't tell it these steps. It figured them out. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(But I want to add one more thing before we build.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(14:12 Before I add one more thing, let's go ahead and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(take a look what it has already. Here we have a  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(14:18 resource plan workflow. And if I scroll through, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(I can see there's some files that are going to be  ) Tj
+ET
+endstream
+endobj
+19 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 20 0 R
+>>
+endobj
+20 0 obj
+<<
+/Length 5807
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(14:23 created. And remember once we accept it to keep an ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(eye over on explore here because you're going to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(14:27 see it get created. It's going to uh go ahead ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(and create this research report uh.md as I go  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(14:34 down. Step two, confirm the plan. Three, research. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(Four, write the report. Five, save the output. It  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(14:39 gave me some formatting. So, if I like everything ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(here, I could go ahead yes and auto accept or yes,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(14:45 manually approve or keep planning. But what I'm ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(going to say is this. I also want the report to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(14:50 include a section at the end with key takeaways ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(and recommendations for the next step. So,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(14:55 I'm just going to put that in and hit enter. So, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(it's going to update the plan. It doesn't just  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(15:01 start over. It just folds the new requirement into ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(what it already had. So, that's why plan mode is  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(15:07 so valuable. you can shape the approach before ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(anything gets built. So I can see now it says  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(15:14 uh right here plan updated the report template ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(will now include two additional sections here I  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(15:18 have recommended next steps key takeaways. So I'm ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(going to go ahead and you know what I'm going to  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(15:24 I'm happy with it. Let's build it and I'm going ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(to go to auto accept. So it's just going to go  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(15:28 through and accept everything. So you're going ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(to see the mode change from plan and as I click  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(15:33 on this just keep an eye on explorer. So notice ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(we have our workflows. If I go ahead and open it,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(15:40 it's still working, but we have the research ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(report MD that I said it was going to create.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(15:46 Now let's look at what it actually wrote. This is ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(the important part. So I'm I'm going to go to the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(15:51 research report MD file and just double click ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(on it. And you'll see it opens up. We have the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(15:56 uh chat over here with it. But here we have the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(file. Now, at the top, I've got its objective  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(16:02 or purpose here. A clear statement of what the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(workflow does. Given a topic from the user, ask  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(16:08 clarifying questions. Conduct structured research. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(Okay. So, let's move down to the next. We have the  ) Tj
+ET
+endstream
+endobj
+21 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 22 0 R
+>>
+endobj
+22 0 obj
+<<
+/Length 5794
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(16:14 qualifying question steps. Ask the user these ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(questions. And you get an idea. What are the  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(16:20 specific angles of the questions you want covered? ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(Who will read the report? Do you want a quick uh  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(16:25 overview or deep dive? And you can see the other ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(ones that include uh format preferences. Now,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(16:33 this is what makes it a gentic rather than just ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(a dumb text generator. It's going to check with  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(16:38 you before it runs off and does the work. So, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(no more garbage output because it guessed wrong  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(16:44 about what you wanted. So, then it moves down. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(We can see it confirmed the plan after receiving  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(16:49 the answers. Confirm the research plan with users ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(before starting. We have step three, the research  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(16:55 topic. as we uh go through and look at the details ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(for each of these, you know, like avoid opinion  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(17:03 only posts. Uh for recent developments, include ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(sources from the last 12 months where possible  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(17:08 uh what to look for while researching. Now we're ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(on to writing the report with the writing rules,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(17:15 the tone, and then saving the output. And we do ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(have some error handling. If the topic is too  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(17:21 broad to research meaningfully, say so and ask the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(user to narrow it. Now, here's the be beautiful  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(17:26 part about all this. Every single word in this ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(file is just plain English. There's no code,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(17:31 no special syntax. If you wanted to change ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(something like adding a step where it creates a  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(17:36 summary table or removing the clarifying questions ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(for quick task, you just edit the text. The agent  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(17:43 adapts to whatever you write. So, that's the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(power of this approach. I want to go back over  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(17:48 to Claude Code and ask this question right here. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(What workflows do you have available? And look,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(17:54 it lists our research report workflow and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(describes exactly what it does. It knows what  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(17:58 it's capable of now. So, let's put this to work. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(Now, for the fun part, I'm going to give it a real  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(18:04 research task and we're going to watch the whole ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(agentic workflow run from start to finish. I'm  ) Tj
+ET
+endstream
+endobj
+23 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 24 0 R
+>>
+endobj
+24 0 obj
+<<
+/Length 5772
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(18:10 going to go and put this in. I want to research ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(the current state of AI agents in 2026. What are  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(18:15 people actually using them for? What's working? ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(What's overhyped? And where things are heading.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(18:21 Now, watch. The first thing it should do is ask ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(me questions because that's what the workflow  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(18:26 says to do. So there it is. Look, it's asking, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(you know, the audience, the scope, the depth,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(18:33 all these questions. Now, I need to answer it, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(but I can answer it naturally, like I'm talking  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(18:38 to a colleague, and this is how I'm going to do ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(it. Keep it broad. I want a hype versus reality  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(18:44 breakdown. The audience is techsavvy people ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(who are curious about AI, but not necessarily  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(18:49 developers. Medium depth. include specific tools, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(platforms, stick to the last 6 to 12 months, and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(18:55 formatted structured posts for clear sections and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(bulleted points. So, let's submit. Now, it's going  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(18:60 to take those answers and start working. Watch the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(to-do list. Now, here's the plan before it starts.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(19:07 You can see AI agents 2026, what people are ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(actually doing, all the uh things I just answered,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(19:13 what questions I'll research are these ones, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(and I'm just going to say proceed. Yes. And  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(19:19 notice now even on the side we have resources a ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(folder that's there. I'm going to say allow. Yes.) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(19:30 So it's searching the web, reading through ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(results, pulling out relevant information.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(19:35 You can see it thinking through what it finds. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(And remember this is web search built right into  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(19:41 cloud code. No plugins, no MCP setup, no ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(BI API keys. It just works out of the box.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(19:48 Now I have to allow it to write. All right, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(it's all done. The link to the finished report  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(19:55 is here. It's also in my output. It lives right ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(here. It's the same thing. Now, the one thing I  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(20:00 just wanted to point out here, this right here, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(the uh most honest number, even the best models  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(20:05 only succeed 45.7% of the time on real world task. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(Human oversight isn't optional yet. I wonder how  ) Tj
+ET
+endstream
+endobj
+25 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 26 0 R
+>>
+endobj
+26 0 obj
+<<
+/Length 5790
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(20:12 fast this number will change. I must say it's kind ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(of comforting to know this. But let's go ahead and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(20:17 open up the report. So remember when it opens ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(up the MD file, this is in markdown uh language  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(20:24 here. So it doesn't look quite as nice as the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(formatted report. But if we hit control, shift,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(20:28 and v together, it's going to give the preview of ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(it. So we have the topic and everything that we  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(20:35 said said wanted in it from the depth of 3 to five ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(pages, the date range, the audience. We have our  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(20:42 executive summary up top here, background, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(uh what are the what's actually working,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(20:48 key findings. So, we have this detailed report now ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(going all the way through uh really narrowing down  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(20:55 specifically what I told it to search. So, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(each time I do this, it's going to be very  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(20:60 specific. It gives me all the sources to this. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(So, the agent did all the thinking, organizing,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(21:06 and all the writing. But we're not done yet. Let ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(me show you one more thing that makes the agendic  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(21:12 workflow so powerful. Iteration. I'm going to ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(say this. The executive summary is a bit long.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(21:18 Trim it to three bullet points. Now watch. It ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(doesn't start over again. It goes into the report,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(21:25 finds the executive summary, and trims it down. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(Clean, targeted, edited. And one more thing I  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(21:33 wanted to do, add a comparison table of the top ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(five AI agent tools mentioned in the report.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(21:39 So, look at that. It scans through what it already ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(wrote, identifies the tools it mentioned, and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(21:44 created a formatted comparison table. It didn't ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(need me to list the tools. It pulled it from its  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(21:49 own research. Let's go check out those changes. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(So, I'm just going to open back up this. I'll go  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(21:54 back to preview. We should see a shorter summary. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(There's the three. 1 2 3. And now, uh, before this  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(22:01 was six. It didn't have quite the comparison ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(on it, but now 1 2 3 4 five on it. So, it made  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(22:08 those quick updates to the files. That's what I ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(mean by Agent. It remembers the context and it  ) Tj
+ET
+endstream
+endobj
+27 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 28 0 R
+>>
+endobj
+28 0 obj
+<<
+/Length 5802
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(22:13 knows the project and it builds on what's already ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(there instead of starting from scratch each time.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(22:18 Once you start working this way, it's really hard ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(to go back. All right, before we wrap up, let me  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(22:23 save you some time with the five biggest mistakes ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(I see people make and some pro tips that go with  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(22:27 them. Mistake number one, skipping claw.md. I ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(know I keep saying it, but this one file changes  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(22:34 everything. Two minutes of setup saves you hours ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(of frustration. Just do it. Mistake number two,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(22:39 being too vague. Do some research gives you ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(generic garbage, but research remote working  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(22:44 trends for general audience. Focus on productivity ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(data from the last 6 months and formatted as a  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(22:49 structured report with bullet points. That gives ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(you gold. Being specific is everything. Mistake  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(22:55 number three, not using plan mode. If you skip ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(planning and jump right to execution, the agent  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(23:00 might go down the wrong path and you've wasted ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(your time. Plan first, build second. It takes an  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(23:05 extra 30 seconds, but it's well worth it. Mistake ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(number four, not telling it to ask questions.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(23:11 If your workflow doesn't say ask clarifying ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(questions before starting, the agent will assume,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(23:16 and assumptions lead to wasted time and mediocre ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(output. Always build that check-in step. Mistake  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(23:22 number five, trying to build everything at once. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(Start with one workflow, get it working well,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(23:27 refine it, then build the next one. Don't try to ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(automate your entire life in a single weekend.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(23:32 Trust me on this one. Now, here are some quick ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(pro tips. Keep your workflow files in a workflow  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(23:37 folder. It keeps things organized as you build ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(more of them. Read the agents to-do list and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(23:42 reasoning as it works. It's the best tool you have ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(for understanding what's happening and catching  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(23:47 mistakes early before they snowball. When the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(output isn't right, tell the agent specifically  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(23:52 what to fix. Don't start over. Targeted feedback ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(is way faster than redoing the whole thing. And  ) Tj
+ET
+endstream
+endobj
+29 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 30 0 R
+>>
+endobj
+30 0 obj
+<<
+/Length 5773
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(23:57 save your best claw.md and workflow files. You can ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 768.1892125984252289 Td
+(copy them into new projects as starting points.  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 751.1813385826771992 Td
+(24:03 Over time, you'll build a library of workflows ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 734.1734645669291695 Td
+(that make it incredibly efficient. One more,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 717.1655905511811397 Td
+(24:08 and this is a really useful one. If the ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 700.15771653543311 Td
+(agent goes off in the wrong direction,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 683.1498425196850803 Td
+(24:12 hover over a previous point in the thread, and ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 666.1419685039369369 Td
+(you have the option to roll back the conversation,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 649.1340944881889072 Td
+(24:17 and this undoes file changes that the agent made. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 632.1262204724408775 Td
+(So, you can rephrase your prompt and try again. No  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 615.1183464566928478 Td
+(24:23 need to manually undo edits or start over again. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 598.1104724409448181 Td
+(It's a great safety net, especially when you're  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 581.1025984251967884 Td
+(24:28 still learning how to write good prompts. And ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(finally, effort levels. Type effort followed by  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 547.086850393700729 Td
+(24:34 low, medium, or high to control how deeply ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 530.0789763779526993 Td
+(the agent thinks before responding. Low is  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 513.0711023622046696 Td
+(24:39 fast and lightweight, great for simple edits. High ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 496.0632283464566399 Td
+(means it really slows down reasons carefully and  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 479.0553543307086102 Td
+(24:44 produces its best work. Use that for more complex ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 462.0474803149605805 Td
+(research or multi-step task. If you're not sure,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 445.0396062992125508 Td
+(24:49 just leave it on the default and Claude will ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 428.0317322834645211 Td
+(figure it out. But knowing this dial exists is  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 411.0238582677164914 Td
+(24:54 useful once you start running longer workflows. ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 394.0159842519684616 Td
+(Let's bring it all together. In the first video,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 377.0081102362204319 Td
+(24:58 we used Claude code to build an app. Today, we ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 360.0002362204724022 Td
+(used it to build an agent. The first one does  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 342.9923622047243725 Td
+(25:04 what you tell it. The second one figures things ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 325.9844881889763428 Td
+(out on its own. That's a huge jump. And that's  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(25:09 what you did today. So, here's my challenge ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 291.9687401574802834 Td
+(for you. Build one workflow this week, just  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 274.9608661417322537 Td
+(25:13 one. Pick something you do regularly, research, ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 257.952992125984224 Td
+(writing, organizing, analysis, whatever it is,  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 240.9451181102361943 Td
+(25:19 and turn it into a workflow file. It doesn't have ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 223.9372440944881646 Td
+(to be perfect. Just get it running and see what  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 206.9293700787401349 Td
+(25:24 happens. Let me know down below in the comments ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 189.9214960629919915 Td
+(what you come up with. I'm always curious to see  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 172.9136220472439618 Td
+(25:28 what people are thinking about, what they could ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 155.9057480314959321 Td
+(automate through one of these workflows. Thanks  ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 138.8978740157479024 Td
+(25:33 for watching this time on Teachers Tech. I'll see ) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 121.8899999999998727 Td
+(you next week with more tech tips and tutorials.) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R ]
+/Count 14
+>>
+endobj
+31 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+32 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+33 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+34 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+35 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+36 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+37 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+38 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+39 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+40 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+41 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+42 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+43 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+44 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 31 0 R
+/F2 32 0 R
+/F3 33 0 R
+/F4 34 0 R
+/F5 35 0 R
+/F6 36 0 R
+/F7 37 0 R
+/F8 38 0 R
+/F9 39 0 R
+/F10 40 0 R
+/F11 41 0 R
+/F12 42 0 R
+/F13 43 0 R
+/F14 44 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+45 0 obj
+<<
+/Producer (jsPDF 3.0.4)
+/CreationDate (D:20260531151226+08'00')
+>>
+endobj
+46 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 47
+0000000000 65535 f 
+0000083969 00000 n 
+0000085880 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000006011 00000 n 
+0000006148 00000 n 
+0000011997 00000 n 
+0000012134 00000 n 
+0000018013 00000 n 
+0000018151 00000 n 
+0000024016 00000 n 
+0000024155 00000 n 
+0000030021 00000 n 
+0000030160 00000 n 
+0000036046 00000 n 
+0000036185 00000 n 
+0000042068 00000 n 
+0000042207 00000 n 
+0000048079 00000 n 
+0000048218 00000 n 
+0000054078 00000 n 
+0000054217 00000 n 
+0000060064 00000 n 
+0000060203 00000 n 
+0000066028 00000 n 
+0000066167 00000 n 
+0000072010 00000 n 
+0000072149 00000 n 
+0000078004 00000 n 
+0000078143 00000 n 
+0000084115 00000 n 
+0000084241 00000 n 
+0000084372 00000 n 
+0000084506 00000 n 
+0000084644 00000 n 
+0000084768 00000 n 
+0000084897 00000 n 
+0000085029 00000 n 
+0000085165 00000 n 
+0000085293 00000 n 
+0000085420 00000 n 
+0000085549 00000 n 
+0000085682 00000 n 
+0000085784 00000 n 
+0000086133 00000 n 
+0000086219 00000 n 
+trailer
+<<
+/Size 47
+/Root 46 0 R
+/Info 45 0 R
+/ID [ <85A8E33A197FF106F25CC5DBB2DE41E7> <85A8E33A197FF106F25CC5DBB2DE41E7> ]
+>>
+startxref
+86323
+%%EOF

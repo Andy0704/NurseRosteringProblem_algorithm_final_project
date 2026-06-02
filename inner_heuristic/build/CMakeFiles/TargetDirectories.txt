@@ -1,0 +1,3 @@
+/mnt/c/Project/NRP_algorithm_lab/NRP_Claude_Agent/inner_heuristic/build/CMakeFiles/nrp_heuristic.dir
+/mnt/c/Project/NRP_algorithm_lab/NRP_Claude_Agent/inner_heuristic/build/CMakeFiles/edit_cache.dir
+/mnt/c/Project/NRP_algorithm_lab/NRP_Claude_Agent/inner_heuristic/build/CMakeFiles/rebuild_cache.dir
