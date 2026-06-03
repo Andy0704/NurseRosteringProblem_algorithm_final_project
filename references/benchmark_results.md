@@ -1,5 +1,25 @@
 # NRP Myopic Benchmark Results
 
+<!-- ============================================================ -->
+<!-- UPDATE 2026-06-04 — SA≡evaluator cost identity complete -->
+<!-- ============================================================ -->
+## Post-Identity-Fix Status (2026-06-04)
+
+The table below is the **myopic MILP baseline** (2026-06-02), kept as the pre-fix reference.
+After the SA≡evaluator cost identity fix (SD-1/2/3 + carry-in + forbidden-as-hard):
+
+- **n021w4 week 1 full pipeline**: `sa_initial` dropped from **755 (ratio ~9)** to **0**, fully aligned with `milp_obj=0`.
+- **Identity verified**: 800 random schedules (n021w4 weeks 0–3, 200 each), per-item S2/S3/forbidden all diff <1e-6.
+- **Bonus finding**: S1_coverage was already homologous (0/800 diff) — the earlier known-divergent mark was conservative.
+- **Known residual**: SA still frozen (delta=0) due to hard coverage check (return 999999) — next-step issue, NOT a cost-function problem.
+- The `ratio` metric used in the pre-fix baseline below is now considered a **pseudo-metric**; correct standard is per-solution per-item equality.
+
+The myopic per-week penalty breakdown below remains valid as the MILP-only baseline for measuring future look-ahead improvements.
+
+---
+
+# Myopic MILP Baseline (pre-fix reference)
+
 **Method**: Myopic multi-week MILP (`multi_week_runner.py`)  
 **Solver**: PuLP / CBC  
 **Per-week time limit**: 60 s  

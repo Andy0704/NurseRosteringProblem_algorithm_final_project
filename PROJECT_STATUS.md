@@ -4,7 +4,7 @@
 <!-- Rule: surgical edits only — update changed rows, prepend to Recent Changes, never rewrite stable sections -->
 
 ## Last Updated
-2026-06-03 — SA-evaluator identity diagnostic (planning complete, execution pending)
+2026-06-04 — SA≡evaluator cost identity COMPLETE (段1–3 all passed, 800 random schedules per-item clean)
 
 ## Component Status
 
@@ -17,9 +17,9 @@
 | outer_milp/utils/multi_week_runner.py | ✅ Complete | 4-week history propagation verified (MYOPIC MILP ONLY — does not invoke F&O or C++ heuristic) |
 | outer_milp/utils/validate_schema.py | ✅ Complete | exit 0/1 |
 | outer_milp/utils/json_handler.py | ✅ Complete | fail-loud UTF-8 |
-| inner_heuristic/src/heuristic.cpp | ⚠️ Untested change | SA+LA; hard coverage check (return 999999) in TwoWaySwap+DayOff — NO test covers this C++ change; cross-instance side-effects unverified | PENDING identity rewrite: consec blocks (SD-1/2/3) + nurseCostFull→struct
+| inner_heuristic/src/heuristic.cpp | ✅ Consec cost homologous | SA+LA; consec-work/off cost now identical to penalty_evaluator (SD-1/2/3 fixed, transition-based, carry-in aligned, forbidden moved to hard count). Verified by 800 random schedules + 10 carry-in cases. NOTE: hard coverage check (return 999999) still freezes SA — separate next-step issue |
 | inner_heuristic/build/nrp_heuristic | ✅ Built | recompiled 2026-06-03 |
-| tests/test_pipeline.py | ✅ 7/7 PASS | +test_milp_coverage_skill_feasible (tests MILP solve() output only). NOTE: all 7 are Python-layer; the C++ SA hard coverage check has NO test coverage |
+| tests/ (all) | ✅ 18/18 PASS | test_pipeline.py (7, incl. test_milp_coverage_skill_feasible) + test_sa_carryin.py (10, deterministic carry-in) + test_sa_identity.py (1, 800 random schedules per-item S2/S3/forbidden <1e-6) |
 | docker/Dockerfile | ❌ Not started | Phase 4 |
 
 
@@ -42,24 +42,24 @@ See `references/benchmark_results.md` for full per-week breakdown.
 - [2026-06-02] feat: F&O integrated into main loop
 - [2026-06-02] checkpoint: before F&O
 - [2026-06-02] chore: initial scaffold with heuristic stub
+- [2026-06-04] feat: SA≡evaluator cost identity (SD-1/2/3 + carry-in + forbidden-as-hard); 800 random schedules per-item clean; n021w4 ratio 9→0
 
 ## Next Steps
 
 - [x] Fix config.json key mismatch (instance_dir vs exchange_path)
 - [x] Benchmark n021w4 w0 with full pipeline (S1=0, total=0)
-- [ ] Benchmark n021w4 full 4-week with MILP+F&O+SA pipeline
-- [ ] Benchmark n030w4 with full pipeline
-- [ ] **[NEXT]** Execute SA≡evaluator identity fix (see SA_IDENTITY_DIAGNOSTIC.md) — Perform in three stages: Stage 1 read-only confirmation + forbidden classification → Stage 2 modification + 10 deterministic carry-in cases → Stage 3 800 random solutions + pipeline  
-- [ ] Re-evaluate hard coverage check (SA-frozen?) — ONLY after identity fix (currently cost is still fluctuating, cannot judge accurately)
+- [x] Execute SA≡evaluator identity fix (段1 read-only + forbidden classify → 段2 changes + 10 carry-in cases → 段3 800 random + pipeline). DONE 2026-06-04, see SA_IDENTITY_DIAGNOSTIC.md
+- [ ] **[NEXT]** Re-evaluate hard coverage check (SA frozen, delta=0 confirmed in 段3) — replace 999999 with large soft penalty so SA can explore
+- [ ] S4 weight 5→10 (known one-constant fix, 段3 confirmed pure weight diff)
+- [ ] Benchmark n021w4 full 4-week with MILP+F&O+SA pipeline (NOT yet done — single-week only so far)
+- [ ] Benchmark n030w4 with full pipeline (NOT yet done)
 - [ ] Look-ahead mechanism in multi_week_runner.py
 - [ ] Docker packaging (Phase 4)
 
 ## Known Issues
 
+- **[NEXT — top priority]** SA hard coverage check (return 999999) freezes the search: a metaheuristic relies on tolerating temporary worsening to escape local optima. 段3 pipeline smoke confirmed SA delta=0 (frozen) on n021w4 w1. Now that cost is homologous (no longer fluctuating), this can finally be judged accurately. Decide whether to replace 999999 with a large soft penalty so SA can explore.
 - PuLP 4.0 deprecation warnings (LpVariable, PULP_CBC_CMD) — non-fatal
-- **[ROOT CAUSE IDENTIFIED, fix planned]** 
-    The residual in n021w4 is not due to assignment scaling, but rather a drift in the implementation of the SA cost function and penalty_evaluator (which was not intended by design). Three structural drifts have been identified: SD-1/2/3 plus carry-in; see references/SA_IDENTITY_DIAGNOSTIC.md for details. Conclusion: The fix will revert to the original source (using the evaluator as the single source of truth), **not** fix the MILP formulation, **not** normalize weights, and **not** accept the gap—these three previous options have all been ruled out. The ratio is a pseudo-metric; the correct standard is precise equality per solution per item within <1e-6.
-- **[UNRESOLVED, must define before fix]**
-    The total attribution conflict of forbidden succession: the evaluator returns the raw count but does not add it to the total, while SA uses FORBIDDEN_WEIGHT=25 to include it in the total → the two layers of total cannot structurally be equal. Before proceeding, it must be determined whether forbidden is hard (SA does not include it in the total) or soft (the evaluator compensates by recalculating).
-- SA hard coverage check (return 999999) may over-constrain the search: a metaheuristic relies on tolerating temporary worsening to escape local optima. Whether n021w4 w0's total=0 is SA-optimized or SA-frozen-on-MILP-solution cannot be distinguished from a single instance — needs multi-instance verification.
-- **[evaluator-vs-official semantics gap]** CW-1-WeekB boundary case: when a cross-week work run ends exactly at the Week A/B boundary (Week A all 7 days work → Week B d=0 is off), both SA and evaluator silently drop the run penalty (carry-in only fires when d=0 is work, so the deferred run from Week A is never scored if Week B starts with a day off). SA≡evaluator are consistent here, but whether this matches INRC-II official scoring semantics is unverified. Needs confirmation against official validator when running n030+ benchmark.
+- **[S4 weight — known simple fix]** SA `SHIFT_OFF_REQ_W=5` vs evaluator `_W_PREF=10`. 段3 measured 727/800 schedules diverge by exactly violation_count × 5, confirming this is a pure weight difference (logic identical). Fix = change the one constant 5→10.
+- **[RESOLVED 2026-06-04]** SA-evaluator cost drift (the n021w4 ratio 5–9 residual). Root cause was implementation drift (not design): SD-1 (open-run scoring), SD-2 (flat vs proportional min-violation), SD-3 (SA-only same-shift block), plus carry-in misalignment, plus forbidden wrongly in soft total. Fixed by rewriting SA consec cost to be identical to penalty_evaluator (single source of truth) and moving forbidden to a hard count (Change D). Verified: 800 random schedules per-item clean, n021w4 w1 ratio 9→0. The ratio metric itself was confirmed a pseudo-metric — correct standard is per-solution per-item equality <1e-6. See references/SA_IDENTITY_DIAGNOSTIC.md.
+- **[evaluator-vs-official semantics gap — still open]** CW-1-WeekB boundary case: when a cross-week work run ends exactly at the Week A/B boundary (Week A all 7 days work → Week B d=0 is off), both SA and evaluator silently drop the run penalty (carry-in only fires when d=0 is work, so the deferred run from Week A is never scored if Week B starts with a day off). SA≡evaluator are consistent here, but whether this matches INRC-II official scoring semantics is unverified. Needs confirmation against official validator when running n030+ benchmark.
