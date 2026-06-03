@@ -207,100 +207,119 @@ static int coverageCostDay(const Problem& prob,
 }
 
 // ============================================================
-// Section 4b: Full soft-constraint cost for a single nurse
+// Section 4b: Per-nurse cost breakdown struct + full cost function
 // ============================================================
-static int nurseCostFull(const Problem& prob,
-                         const std::vector<std::vector<int>>& sched,
-                         int n)
+
+// NurseCost: per-component breakdown returned by nurseCostFull.
+// forbidden_hard is an H3 hard-constraint count — NOT included in total.
+// total = s2_consec_work + s3_consec_off + s4_pref + assignment (soft only).
+struct NurseCost {
+    int s2_consec_work = 0;
+    int s3_consec_off  = 0;
+    int s4_pref        = 0;
+    int forbidden_hard = 0;
+    int total          = 0;
+};
+
+static NurseCost nurseCostFull(const Problem& prob,
+                               const std::vector<std::vector<int>>& sched,
+                               int n)
 {
     const NurseData& nurse    = prob.nurses[n];
     const Contract&  contract = prob.contracts.at(nurse.contract_id);
     const int D = prob.num_days;
-    int penalty = 0;
+    NurseCost nc;
 
-    // Forbidden successions (including cross-week boundary)
+    // Forbidden successions — H3 HARD constraint (Change D):
+    // count violations separately; do NOT add to soft total.
     if (nurse.hist_last_shift != 0 && sched[n][0] != 0) {
         if (prob.forbidden_succ.count({nurse.hist_last_shift, sched[n][0]}))
-            penalty += FORBIDDEN_WEIGHT;
+            nc.forbidden_hard++;
     }
     for (int d = 1; d < D; d++) {
         int from = sched[n][d - 1], to = sched[n][d];
         if (from != 0 && to != 0 && prob.forbidden_succ.count({from, to}))
-            penalty += FORBIDDEN_WEIGHT;
+            nc.forbidden_hard++;
     }
 
-    // Consecutive working days (initialised from history)
+    // Consecutive working days — transition-based (Change A):
+    // Scores proportionally at work→off transitions; defers open runs (matches evaluator).
     {
-        int run = nurse.hist_consec_work;
+        int run = 0;
         for (int d = 0; d < D; d++) {
             if (sched[n][d] != 0) {
                 run++;
-                if (run > contract.max_consec_work) penalty += CONSEC_WEIGHT;
+                if (d == 0 && nurse.hist_consec_work > 0)
+                    run += nurse.hist_consec_work;
             } else {
-                if (run > 0 && run < contract.min_consec_work) penalty += CONSEC_WEIGHT;
-                run = 0;
+                if (run > 0) {
+                    int pen = 0;
+                    if (run < contract.min_consec_work)
+                        pen = (contract.min_consec_work - run) * CONSEC_WEIGHT;
+                    else if (run > contract.max_consec_work)
+                        pen = (run - contract.max_consec_work) * CONSEC_WEIGHT;
+                    nc.s2_consec_work += pen;
+                    nc.total          += pen;
+                    run = 0;
+                }
             }
         }
-        if (run > contract.max_consec_work) penalty += CONSEC_WEIGHT;
+        // No post-loop check: open run at week end is deferred to next week (matches evaluator).
     }
 
-    // Consecutive days off (initialised from history)
+    // Consecutive days off — transition-based (Change B):
+    // Scores proportionally at off→work transitions; defers open runs (matches evaluator).
     {
-        int run = (nurse.hist_consec_work > 0) ? 0 : nurse.hist_consec_off;
+        int run = 0;
         for (int d = 0; d < D; d++) {
             if (sched[n][d] == 0) {
                 run++;
-                if (run > contract.max_consec_off) penalty += CONSEC_WEIGHT;
+                if (d == 0 && nurse.hist_consec_work == 0)
+                    run += nurse.hist_consec_off;
             } else {
-                if (run > 0 && run < contract.min_consec_off) penalty += CONSEC_WEIGHT;
-                run = 0;
+                if (run > 0) {
+                    int pen = 0;
+                    if (run < contract.min_consec_off)
+                        pen = (contract.min_consec_off - run) * CONSEC_WEIGHT;
+                    else if (run > contract.max_consec_off)
+                        pen = (run - contract.max_consec_off) * CONSEC_WEIGHT;
+                    nc.s3_consec_off += pen;
+                    nc.total         += pen;
+                    run = 0;
+                }
             }
         }
-        if (run > contract.max_consec_off) penalty += CONSEC_WEIGHT;
+        // No post-loop check: open run at week end is deferred to next week (matches evaluator).
     }
 
-    // Total assignments — weekly prorated bounds (align with MILP milp_model.py S5)
-    // MILP uses: weekly_min = min_assign // 4, weekly_max = ceil(max_assign / 4)
-    // and compares against current-week working days only (no cumulative history).
+    // Total assignments — weekly prorated bounds (aligned with MILP S5).
     {
-        int total = 0;
-        for (int d = 0; d < D; d++) if (sched[n][d] != 0) total++;
+        int worked = 0;
+        for (int d = 0; d < D; d++) if (sched[n][d] != 0) worked++;
         const int weekly_min = contract.min_assign / 4;
         const int weekly_max = (contract.max_assign + 3) / 4;
-        if (total < weekly_min) penalty += TOTAL_ASSIGN_W * (weekly_min - total);
-        if (total > weekly_max) penalty += TOTAL_ASSIGN_W * (total - weekly_max);
+        int pen = 0;
+        if (worked < weekly_min) pen = TOTAL_ASSIGN_W * (weekly_min - worked);
+        else if (worked > weekly_max) pen = TOTAL_ASSIGN_W * (worked - weekly_max);
+        nc.total += pen;
     }
 
-    // Consecutive same-shift type (current week only)
-    {
-        int cur_shift = 0, run = 0;
-        for (int d = 0; d < D; d++) {
-            int s = sched[n][d];
-            if (s != 0 && s == cur_shift) {
-                run++;
-                if (run > prob.shifts[cur_shift].max_consecutive) penalty += CONSEC_WEIGHT;
-            } else {
-                if (cur_shift != 0 && run > 0 && run < prob.shifts[cur_shift].min_consecutive)
-                    penalty += CONSEC_WEIGHT;
-                cur_shift = s;
-                run = (s != 0) ? 1 : 0;
-            }
-        }
-        if (cur_shift != 0 && run > prob.shifts[cur_shift].max_consecutive)
-            penalty += CONSEC_WEIGHT;
-    }
+    // Consecutive same-shift type — Change C: removed (no equivalent in evaluator or MILP).
 
-    // Shift-off requests
+    // Shift-off requests (S4).
     for (const auto& sor : prob.off_requests) {
         if (sor.nurse_idx != n || sor.day >= D) continue;
         int assigned = sched[n][sor.day];
+        int pen = 0;
         if (sor.shift_idx == -1 && assigned != 0)
-            penalty += SHIFT_OFF_REQ_W;
+            pen = SHIFT_OFF_REQ_W;
         else if (sor.shift_idx > 0 && assigned == sor.shift_idx)
-            penalty += SHIFT_OFF_REQ_W;
+            pen = SHIFT_OFF_REQ_W;
+        nc.s4_pref += pen;
+        nc.total   += pen;
     }
 
-    return penalty;
+    return nc;
 }
 
 // ============================================================
@@ -313,7 +332,7 @@ static int fullCost(const Problem& prob,
     for (int d = 0; d < prob.num_days; d++)
         cost += coverageCostDay(prob, sched, d);
     for (int n = 0; n < prob.num_nurses; n++)
-        cost += nurseCostFull(prob, sched, n);
+        cost += nurseCostFull(prob, sched, n).total;
     return cost;
 }
 
@@ -327,8 +346,8 @@ static int deltaTwoWaySwap(const Problem& prob,
                            int n1, int n2, int d)
 {
     int old_partial = coverageCostDay(prob, sched, d)
-                    + nurseCostFull(prob, sched, n1)
-                    + nurseCostFull(prob, sched, n2);
+                    + nurseCostFull(prob, sched, n1).total
+                    + nurseCostFull(prob, sched, n2).total;
 
     std::swap(sched[n1][d], sched[n2][d]);
 
@@ -340,8 +359,8 @@ static int deltaTwoWaySwap(const Problem& prob,
     }
 
     int new_partial = new_cov
-                    + nurseCostFull(prob, sched, n1)
-                    + nurseCostFull(prob, sched, n2);
+                    + nurseCostFull(prob, sched, n1).total
+                    + nurseCostFull(prob, sched, n2).total;
 
     std::swap(sched[n1][d], sched[n2][d]); // revert -- caller decides whether to keep
 
@@ -358,7 +377,7 @@ static int deltaRandomDayOff(const Problem& prob,
                               int n, int d)
 {
     int old_partial = coverageCostDay(prob, sched, d)
-                    + nurseCostFull(prob, sched, n);
+                    + nurseCostFull(prob, sched, n).total;
 
     const int old_shift = sched[n][d];
     sched[n][d] = 0;
@@ -371,7 +390,7 @@ static int deltaRandomDayOff(const Problem& prob,
     }
 
     int new_partial = new_cov
-                    + nurseCostFull(prob, sched, n);
+                    + nurseCostFull(prob, sched, n).total;
 
     sched[n][d] = old_shift; // revert
 
@@ -394,13 +413,13 @@ static double computeT0(const Problem& prob,
         // All-same-shift scenarios
         for (int fill = 1; fill < prob.num_shifts; fill++) {
             for (int d = 0; d < prob.num_days; d++) tmp[n][d] = fill;
-            int c = nurseCostFull(prob, tmp, n);
+            int c = nurseCostFull(prob, tmp, n).total;
             if (c > max_nurse_cost) max_nurse_cost = c;
         }
         // Alternating Night(3)/Early(1): maximises forbidden successions
         for (int d = 0; d < prob.num_days; d++)
             tmp[n][d] = (d % 2 == 0) ? 3 : 1;
-        int c = nurseCostFull(prob, tmp, n);
+        int c = nurseCostFull(prob, tmp, n).total;
         if (c > max_nurse_cost) max_nurse_cost = c;
         // Restore row
         for (int d = 0; d < prob.num_days; d++) tmp[n][d] = sched[n][d];
@@ -523,4 +542,37 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     result["metadata"]["initial_cost"]  = initial_cost;
     result["metadata"]["final_cost"]    = best_cost;
     return result;
+}
+
+// ============================================================
+// runEvalOnly: evaluate the current_schedule in data and return
+// a per-component JSON breakdown (thin wrapper, no new logic).
+// total = S1 + S2 + S3 + S4 (matches evaluator structure; hard
+// constraints excluded — forbidden returned as separate count).
+// ============================================================
+nlohmann::json runEvalOnly(const nlohmann::json& data)
+{
+    Problem prob = parseProblem(data);
+    const auto& sched = prob.schedule;
+
+    int s1 = 0, s2 = 0, s3 = 0, s4 = 0, forbidden_hard = 0;
+    for (int d = 0; d < prob.num_days; d++)
+        s1 += coverageCostDay(prob, sched, d);
+    for (int n = 0; n < prob.num_nurses; n++) {
+        NurseCost nc = nurseCostFull(prob, sched, n);
+        s2            += nc.s2_consec_work;
+        s3            += nc.s3_consec_off;
+        s4            += nc.s4_pref;
+        forbidden_hard += nc.forbidden_hard;
+    }
+    int total = s1 + s2 + s3 + s4;
+
+    nlohmann::json out;
+    out["S1_coverage"]                = s1;
+    out["S2_consecutive_work"]        = s2;
+    out["S3_consecutive_off"]         = s3;
+    out["S4_preferences"]             = s4;
+    out["forbidden_violations"]       = forbidden_hard;
+    out["total"]                      = total;
+    return out;
 }
