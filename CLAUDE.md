@@ -16,13 +16,38 @@ The architecture is divided into two decoupled layers:
 4. **INRC-II Standards**: Logic, terminology, and hard/soft constraint evaluations must strictly align with the Second International Nurse Rostering Competition (INRC-II) definitions.
 
 # Agent Behavioral Rules (Execution & Coding Standards)
-1. **Think Before Coding**: Before outputting any codebase or modifications, analyze existing logic first. Explicitly state your assumptions, inputs, outputs, and algorithmic complexity.
-2. **Surgical Modifications Only**: Do not rewrite entire files. Minimize code diffs by modifying only the precise lines necessary (e.g., specific heuristic moves or constraints), preventing side effects on math models.
-3. **Keep It Simple & Minimalist**: Prefer clean, readable loops and native data structures. Avoid over-engineering, unnecessary design patterns, or introducing third-party libraries without consent (except `nlohmann/json` for C++). Only add, do not modify existing rules.
-4. **Fail Loudly & No Silent Failures**: Implement aggressive error handling at the language boundaries. If C++ JSON parsing fails or `subprocess` crashes, it must throw descriptive errors and exit with a non-zero code immediately. No silent failures.
-5. **Deep Testing (Verify 'Why', Not Just 'If')**: When writing tests for constraints or schedule validity, do not just check boolean success. Ensure the test validates *why* a specific penalty score or constraint violation occurred based on INRC-II rules.
-6. **Step-by-Step Reporting**: For complex multi-step tasks (e.g., building the iterative MILP-Heuristic loop), execute and report back after finishing *each single step*. Wait for human approval before proceeding to the next.
-7. **Adhere to Pre-existing Styles**: Read the project structure and existing code style before implementing new functions. Do not introduce alternative paradigms, variable naming conventions, or structural variations.
+1. **Think Before Coding**:
+   Before outputting any codebase or modifications, analyze existing logic first. Explicitly state your assumptions, inputs, outputs, and algorithmic complexity.
+2. **Surgical Modifications Only**:
+   Do not rewrite entire files. Minimize code diffs by modifying only the precise lines necessary (e.g., specific heuristic moves or constraints), preventing side effects on math models.
+3. **Keep It Simple & Minimalist**:
+   Prefer clean, readable loops and native data structures. Avoid over-engineering, unnecessary design patterns, or introducing third-party libraries without consent (except `nlohmann/json` for C++). Only add, do not modify existing rules.
+4. **Fail Loudly & No Silent Failures**:
+   Implement aggressive error handling at the language boundaries. If C++ JSON parsing fails or `subprocess` crashes, it must throw descriptive errors and exit with a non-zero code immediately. No silent failures.
+5. **Deep Testing (Verify 'Why', Not Just 'If')**:
+   When writing tests for constraints or schedule validity, do not just check boolean success. Ensure the test validates *why* a specific penalty score or constraint violation occurred based on INRC-II rules.
+6. **Step-by-Step Reporting + Pre-Execution Segmentation**: 
+   For complex multi-step tasks, execute and report after each individual step, waiting for human approval before proceeding.  
+   Additional: If a single plan exceeds about 150 lines or involves more than 3 code changes plus tests, it must be segmented before execution according to dependency boundaries (typical: read-only analysis → changes + narrow verification → broad verification), with each segment stopping to report.
+7. **Adhere to Pre-existing Styles**:
+   Read the project structure and existing code style before implementing new functions. Do not introduce alternative paradigms, variable naming conventions, or structural variations.
+8. **No Proxy Metrics for Correctness**:  
+   When verifying whether two components are consistent, the only standard is per-solution exact equality (<1e-6), comparing item by item. Using proxy metrics such as ratio, normalization, or "not too far off" to determine correctness is prohibited. A ratio close to 1 does not prove common origin. An indicator that can pass but does not prove correctness is more dangerous than having no indicator at all.
+9. **Isolate Components Before Asserting**:  
+   Before comparing the sum of multiple components (e.g., total penalty), each item must be separated and compared individually (S1/S2/S3/S4/forbidden each compared separately). Aggregated assertions can disguise "discrepancies in unverified items" as "bugs in the current change." If an item is known to be non-identical, it should be clearly marked as known-divergent and excluded from the total sum; it must not be mixed into the aggregate.
+10. **Verify Assumptions Against Data, Not Semantics**:  
+   Any premise such as "X cannot happen simultaneously," "this value must be 0," or "the two are semantically equivalent," must be validated against actual data using scripts before using it to simplify logic (especially when replacing actual values with boolean proxies). The scope of the data scan should be recorded. Semantic validity ≠ validity in data. If the premise is a one-time gate, indicate the "silent failure mode if violated in the future."
+11. **Surrogate vs Drift**:  
+   When two components compute the same concept but yield different results, first determine qualitatively whether this is an "intentional design" (e.g., for accelerated delta evaluation or proxy cost for multi-objectives) or an "implementation drift" (each implemented differently and incorrectly).  
+   If it is drift → fix it back to the same source (align to a single source of truth), do not try to preserve order, do not align numbers, and do not retroactively package it as an objective design.  
+   Delta evaluation is an O(1) precise incremental update for the same goal, not another function.
+12. **Define Objective Membership Explicitly**:
+   Each penalty term must clearly specify "whether it is included in the final optimization objective total, at which layer it is included, and with what weight."
+   If a term is included in the total at layer A but not at layer B, this constitutes a structural homology contradiction.
+   Simply "comparing the count of that term" will bypass rather than resolve the issue.
+   The total membership of hard constraints (such as H3 forbidden=0) and soft constraints must be consistent across both layers.
+
+
 
 
 # Project Structure

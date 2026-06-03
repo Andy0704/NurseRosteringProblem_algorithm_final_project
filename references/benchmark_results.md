@@ -52,3 +52,18 @@
 - **n012w8**: Week 3 spike (390) driven by S2_consec_work (300) — history carry-forward causes constraint accumulation in later weeks.
 - **n021w4**: High S1_coverage penalty dominates (1590/1680); indicates insufficient staffing coverage — likely a harder instance with tighter demand.
 - All three instances solved in under 12 seconds total (well within 3-minute budget).
+
+## Interpretation
+
+n021w4 的 S1_coverage 懲罰佔比高達 95%（1590/1680），根本原因是 myopic MILP 每週獨立求解、不考慮跨週人力佈局：21 名護士在各週的合約限制（最大連續工作天、週末配額）下，能投入的班次組合空間狹窄，當 WD 需求略高時，單週 MILP 無法在固定排班史下同時滿足所有班次最低人力需求，只能以懲罰項放鬆，導致 S1 大量累積。n012w8 的 Week 3 S2_consec_work 驟升至 300，是「myopic 累積效應」的典型呈現：前三週的排班決策各自最優化，但會留下連續工作天數接近上限的歷史狀態，到第四週時 CBC 幾乎被迫讓部分護士違反最小/最大連續工作天約束，而無前瞻機制可在早期週次預先製造緩衝。這組 baseline 資料直接指出演算法的下一個改進目標：Fix-and-Optimize（F&O）應優先以 S1_coverage 違規最嚴重的班次-天組合為分解軸（而非純粹依護士索引滑窗），同時 multi_week_runner 需引入至少一層前瞻（look-ahead），在當週排班時預扣部分人力餘裕以防止後期週次的連續天數懲罰爆炸。
+
+<!-- Updated: 2026-06-03 — 3-sentence structured analysis -->
+**[S1] n021w4 coverage penalty (95% of total):**
+21 名護士在各週合約限制（連續工作天上限、週末配額）下可用的排班組合空間已被壓縮，myopic MILP 每週獨立求解、不知道未來週次的需求分佈，一旦當週 WD 需求略高就只能用懲罰項放鬆最低覆蓋，導致 S1 累積達 1590。
+
+**[S2] n012w8 Week 3 myopic accumulation pattern:**
+前三週各自最優化的排班決策會留下「連續工作天接近上限」的歷史狀態，第四週 CBC 幾乎被迫讓部分護士違反連續天數約束，因為沒有前瞻機制在早期週次預先製造緩衝，S2 懲罰因此從 Week 2 的 60 驟升至 Week 3 的 300。
+
+**[S3] Algorithm next improvement target:**
+F&O 的分解軸應從純粹的護士索引滑窗改為「S1 違規最嚴重的班次–天組合優先」，同時 multi_week_runner 需加入一層前瞻，在當週排班時預扣人力餘裕，以阻斷跨週的連續天數懲罰爆炸。
+

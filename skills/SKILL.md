@@ -50,8 +50,7 @@ python3 outer_milp/utils/validate_schema.py data/exchange/problem_exchange.json
 - `nrp_heuristic` takes exactly one argument (the exchange file path) and
   overwrites it with the result. There is no separate output path.
 - Instance path includes `testdatasets_json/` subdirectory.
-- The current heuristic is a stub (returns data unchanged); the pipeline
-  still exercises the full parse → binary → validate chain.
+- The heuristic is a full SA + Late Acceptance engine (NOT a stub).
 
 ---
 
@@ -66,9 +65,9 @@ python3 outer_milp/utils/validate_schema.py data/exchange/problem_exchange.json
 Exits `0` and prints `VALID`; exits `1` with a descriptive message on the
 first schema violation found.
 
-**TODO:** `--verbose` mode (show per-field details) is not yet implemented in
-`validate_schema.py`. Add a `--verbose` flag there when soft-constraint
-penalty reporting is needed.
+**Note:** `validate_schema.py` fails fast on the first schema error.
+A `--verbose` mode (continue past first error, report all violations) is not yet
+implemented. For soft-constraint penalty breakdown use `penalty_evaluator.py` instead.
 
 ---
 
@@ -115,6 +114,17 @@ done
 - 描述：跑完整測試套件
 - 執行：cd /mnt/c/Project/NRP_algorithm_lab/NRP_Claude_Agent && python3 -m pytest tests/ -v
 
+## skill_identity_verify
+- Description: Verify whether two independent implementations (C++ SA cost vs Python evaluator) produce item-wise identical results on the same input.
+- Rules:
+  1. Per-solution per-item exact equality within <1e-6 is required; ratio or normalized proxy metrics are forbidden.
+  2. Assert item-wise comparisons (S1/S2/S3/S4/forbidden each compared separately); aggregate total comparisons are forbidden.
+  3. Known non-identical items marked as known-divergent or log do not block verification; ratio fallback is absolutely prohibited.
+  4. On failure, immediately stop and print the itemized breakdown from both sides.
+  5. --eval-only must invoke the main process on the same batch of primitives (writing separate summation logic is forbidden to avoid a third source of drift).
+  6. Deterministic boundary cases (carry-in/boundary values/delayed scoring) must be tested before large-scale random inputs.
+- Prerequisite verification: Any premise that "cannot happen simultaneously" or "must be a certain value" should first be confirmed by scripting a full dataset scan before use.
+
 ## skill_git_checkpoint
 - 描述：提交當前進度到 git
 - 執行：git add -A && git commit -m "checkpoint: $(date +%Y%m%d_%H%M)"
@@ -130,10 +140,5 @@ done
 
 
 **Notes:**
-- MILP (`MilpModel.build/solve`) is not yet implemented; this skill exercises
-  the parser + C++ stub only.
-- Once `MilpModel` is implemented, insert
-  `python3 outer_milp/main.py --config config.json` between parse and heuristic
-  steps and replace the inline loop with a proper config-driven run.
-- "Total penalty per week" requires a penalty evaluator (not yet built).
-  Add `outer_milp/utils/penalty_evaluator.py` and call it here when ready.
+- For full MILP→F&O→SA pipeline use run_4week_full_pipeline.py instead.
+- penalty_evaluator.py is implemented (S1–S7 + forbidden).

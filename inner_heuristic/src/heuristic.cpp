@@ -259,12 +259,16 @@ static int nurseCostFull(const Problem& prob,
         if (run > contract.max_consec_off) penalty += CONSEC_WEIGHT;
     }
 
-    // Total assignments
+    // Total assignments — weekly prorated bounds (align with MILP milp_model.py S5)
+    // MILP uses: weekly_min = min_assign // 4, weekly_max = ceil(max_assign / 4)
+    // and compares against current-week working days only (no cumulative history).
     {
-        int total = nurse.hist_num_assign;
+        int total = 0;
         for (int d = 0; d < D; d++) if (sched[n][d] != 0) total++;
-        if (total < contract.min_assign) penalty += TOTAL_ASSIGN_W * (contract.min_assign - total);
-        if (total > contract.max_assign) penalty += TOTAL_ASSIGN_W * (total - contract.max_assign);
+        const int weekly_min = contract.min_assign / 4;
+        const int weekly_max = (contract.max_assign + 3) / 4;
+        if (total < weekly_min) penalty += TOTAL_ASSIGN_W * (weekly_min - total);
+        if (total > weekly_max) penalty += TOTAL_ASSIGN_W * (total - weekly_max);
     }
 
     // Consecutive same-shift type (current week only)
