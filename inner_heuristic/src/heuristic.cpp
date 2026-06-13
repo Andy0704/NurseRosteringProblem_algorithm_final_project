@@ -433,6 +433,32 @@ static int deltaRandomDayOff(const Problem& prob,
 }
 
 // ============================================================
+// Section 5b: Delta evaluation -- ShiftTypeChange(nurse n, day d, new shift s')
+// Sets sched[n][d] = s_new (any shift != current, including 0=off and
+// off->work); reverts after delta measurement. Mirrors deltaRandomDayOff.
+// Complexity: O(N + D)
+// ============================================================
+static int deltaShiftTypeChange(const Problem& prob,
+                                 std::vector<std::vector<int>>& sched,
+                                 int n, int d, int s_new, int M_COVER)
+{
+    int old_units   = coverageDeficitUnitsDay(prob, sched, d);
+    int old_partial = coverageCostDay(prob, sched, d)
+                    + nurseCostFull(prob, sched, n).total;
+
+    const int old_shift = sched[n][d];
+    sched[n][d] = s_new;
+
+    int new_units   = coverageDeficitUnitsDay(prob, sched, d);
+    int new_partial = coverageCostDay(prob, sched, d)
+                    + nurseCostFull(prob, sched, n).total;
+
+    sched[n][d] = old_shift; // revert
+
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
+}
+
+// ============================================================
 // Section 6: T0 estimation
 // Upper-bounds max single-nurse cost by testing exhaustive
 // fill schedules (all-X and alternating Night/Early).
@@ -473,8 +499,10 @@ static double computeT0(const Problem& prob,
 //   Late Acceptance: gamma=150, accept if Z(s') < L[iter mod 150]
 //
 // Operators:
-//   70% TwoWaySwap  -- swap two nurses on one day
-//   30% RandomDayOff -- assign day off to one nurse on one working day
+//   70% TwoWaySwap      -- swap two nurses' shifts on one day
+//   15% RandomDayOff    -- assign day off to one nurse on one working day
+//   15% ShiftTypeChange -- change one nurse-day to a different shift
+//                          (only operator with off->work mobility; Knust 2019)
 // ============================================================
 nlohmann::json runHeuristic(const nlohmann::json& data) {
     Problem prob          = parseProblem(data);
@@ -523,6 +551,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     std::uniform_real_distribution<double> uni01(0.0, 1.0);
     std::uniform_int_distribution<int>     nurse_dist(0, prob.num_nurses - 1);
     std::uniform_int_distribution<int>     day_dist(0, prob.num_days - 1);
+    std::uniform_int_distribution<int>     shift_offset_dist(1, prob.num_shifts - 1);
 
     long long iter        = 0;
     int       no_improve  = 0;
@@ -533,10 +562,21 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
         bool move_valid = false;
         int op_n1 = -1, op_n2 = -1, op_d = -1; // TwoWaySwap params
         int doff_n = -1, doff_d = -1;            // RandomDayOff params
-        bool use_dayoff = (uni01(rng) >= 0.70);
+        int stc_n = -1, stc_d = -1, stc_s = -1;  // ShiftTypeChange params
+        const double op_pick = uni01(rng);
 
-        if (use_dayoff) {
-            // RandomDayOff: pick nurse, collect working days, pick one
+        if (op_pick >= 0.85) {
+            // ShiftTypeChange (15%): pick nurse/day, change to a different
+            // shift (uniform over the num_shifts-1 alternatives, including
+            // 0=off). Only operator with off->work mobility.
+            int n = nurse_dist(rng);
+            int d = day_dist(rng);
+            int s_new = (sched[n][d] + shift_offset_dist(rng)) % prob.num_shifts;
+            delta  = deltaShiftTypeChange(prob, sched, n, d, s_new, M_COVER);
+            stc_n  = n; stc_d = d; stc_s = s_new;
+            move_valid = true;
+        } else if (op_pick >= 0.70) {
+            // RandomDayOff (15%): pick nurse, collect working days, pick one
             int n = nurse_dist(rng);
             std::vector<int> working;
             for (int d = 0; d < prob.num_days; d++)
@@ -552,7 +592,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
         }
 
         if (!move_valid) {
-            // TwoWaySwap (also fallback when no working day found for DayOff)
+            // TwoWaySwap (70%, also fallback when no working day found for DayOff)
             int n1 = nurse_dist(rng);
             int n2 = nurse_dist(rng);
             while (n2 == n1 && prob.num_nurses > 1) n2 = nurse_dist(rng);
@@ -569,7 +609,9 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
                           || (uni01(rng) < std::exp(-static_cast<double>(delta) / T));
 
         if (accept) {
-            if (doff_n >= 0) {
+            if (stc_n >= 0) {
+                sched[stc_n][stc_d] = stc_s;
+            } else if (doff_n >= 0) {
                 sched[doff_n][doff_d] = 0;
             } else {
                 std::swap(sched[op_n1][op_d], sched[op_n2][op_d]);
@@ -597,6 +639,17 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
         iter++;
         if (iter % COOL_EVERY == 0) T *= BETA;
     }
+
+    // Diagnostic-only (stderr, not part of the data contract): termination state.
+    // Only runHeuristic reaches this line; --eval-only calls runEvalOnly directly
+    // and never prints this, so the identity tests stay silent on stdout/stderr.
+    std::cerr << "[nrp_heuristic] DIAG iter=" << iter
+              << " no_improve=" << no_improve
+              << " T=" << T
+              << " T0=" << computeT0(prob, prob.schedule)
+              << " M_COVER=" << M_COVER
+              << " terminated_by=" << (no_improve >= NO_IMPROVE_MAX ? "NO_IMPROVE_MAX" : "T_MIN")
+              << "\n";
 
     nlohmann::json result = data;
     result["current_schedule"]          = best_sched;
