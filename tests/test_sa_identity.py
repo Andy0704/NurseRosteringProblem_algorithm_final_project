@@ -224,3 +224,92 @@ def test_sa_h2_feasible_no_bigm_leak():
     assert abs(sa_eval["total"] - ev_out["total"]) < 1e-6, (
         f"big-M leak suspected: runEvalOnly(best_sched).total={sa_eval['total']} != "
         f"evaluator.total={ev_out['total']}")
+
+
+def test_sa_h2_repair_from_infeasible_seed():
+    """SA must repair an H2-infeasible incoming seed without corrupting final_cost.
+
+    WHY (Rule 9): the cur_cost/best_cost bookkeeping carries an M_COVER *
+    totalH2Units(seed) baseline. If the baseline init is wrong, final_cost
+    for a repaired (H2-feasible) best_sched comes out as a large negative
+    number (e.g. -2966) instead of a clean fullCost (e.g. 30) -- the bug
+    fixed alongside this test.
+
+    Setup: take an H2-feasible MILP-seeded week-2 schedule (n021w4) and
+    knock one nurse off a binding minimum-coverage shift, producing
+    totalH2Units(seed) > 0.
+    """
+    carry = None
+    data = None
+    for week in range(3):
+        data = parse(INSTANCE, week=week, history=0)
+        if carry is not None:
+            for n_idx in range(len(data["nurse_info"])):
+                data["nurse_info"][n_idx]["history"] = carry[n_idx]["history"]
+        model = MilpModel(data)
+        model.build()
+        sched, _ = model.solve(time_limit=15)
+        data["current_schedule"] = sched
+        carry = _end_of_week_history(sched, data["nurse_info"])
+    # data is now an H2-feasible week-2 seed
+
+    sched = data["current_schedule"]
+    D = data["metadata"]["num_days"]
+    S = data["metadata"]["num_shift_types"]
+    demand = data["requirements"]["demand_by_skill"]
+
+    # Find a (day, skill, shift) exactly at minimum coverage (deficit == 0),
+    # then send one assigned nurse home to create totalH2Units(seed) == 1.
+    knocked = False
+    for d in range(D):
+        for skill, dem in demand.items():
+            for s in range(1, S):
+                required = dem[d][s - 1]
+                if required <= 0:
+                    continue
+                assigned_nurses = [
+                    n for n, ni in enumerate(data["nurse_info"])
+                    if sched[n][d] == s and skill in ni["skills"]
+                ]
+                if len(assigned_nurses) == required:
+                    sched[assigned_nurses[0]][d] = 0
+                    knocked = True
+                    break
+            if knocked:
+                break
+        if knocked:
+            break
+    assert knocked, "no binding minimum-coverage shift found to knock off"
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(data, f)
+        fname = f.name
+    try:
+        res = subprocess.run(
+            [BINARY, fname, fname], capture_output=True, text=True, timeout=120,
+        )
+        assert res.returncode == 0, f"SA binary failed: {res.stderr.strip()}"
+        assert "incoming schedule violates H2" in res.stderr, (
+            f"expected H2-infeasible seed warning, got: {res.stderr.strip()}")
+        with open(fname, "r", encoding="utf-8") as fp:
+            sa_out = json.load(fp)
+    finally:
+        os.unlink(fname)
+
+    final_cost = sa_out["metadata"]["final_cost"]
+    best_sched = sa_out["current_schedule"]
+
+    # 1. final_cost must never be negative (the bug's most obvious symptom).
+    assert final_cost >= 0, f"final_cost is negative: {final_cost}"
+
+    # 2. best_sched must be H2-feasible (SA repaired the seed).
+    sa_eval = _run_eval_only(data, best_sched)
+    assert sa_eval["S1_coverage"] == 0, (
+        f"best_sched still violates H2: S1_coverage={sa_eval['S1_coverage']}")
+
+    # 3. final_cost == eval total + (small, non-negative) S5 design-gap --
+    # not eval total - M_COVER (which would be a large negative number).
+    gap = final_cost - sa_eval["total"]
+    assert 0 <= gap < 200, (
+        f"final_cost - eval_total={gap} outside expected S5-gap range "
+        f"(final_cost={final_cost}, eval_total={sa_eval['total']})")

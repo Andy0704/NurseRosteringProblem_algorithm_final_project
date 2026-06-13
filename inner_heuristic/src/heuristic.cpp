@@ -512,14 +512,13 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     // Fail loud (Rule 12): the MILP-seeded incoming schedule must already be
     // H2-feasible (minimum coverage). SA may traverse temporary H2 violations,
     // but it should never have to fix an infeasible starting point.
-    if (totalH2Units(prob, sched) > 0) {
+    const int initial_units = totalH2Units(prob, sched);
+    if (initial_units > 0) {
         std::cerr << "[nrp_heuristic] WARNING: incoming schedule violates H2 "
-                     "minimum coverage (totalH2Units=" << totalH2Units(prob, sched)
+                     "minimum coverage (totalH2Units=" << initial_units
                   << "). MILP seed should be H2-feasible.\n";
     }
 
-    int  cur_cost  = initial_cost;
-    int  best_cost = initial_cost;
     auto best_sched = sched;
 
     // SA / LA parameters
@@ -543,6 +542,12 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     // reported final_cost.
     // ============================================================
     const int M_COVER = static_cast<int>(std::ceil(-std::log(0.05) * T));
+
+    // Invariant: cur_cost_k = fullCost(s_k) + M_COVER * totalH2Units(s_k) for all k.
+    // best_cost is only updated when totalH2Units(s_k)==0, so best_cost is always
+    // a clean fullCost value. final_cost = best_cost is therefore M_COVER-free.
+    int cur_cost  = initial_cost + M_COVER * initial_units;
+    int best_cost = cur_cost;
 
     // Late Acceptance circular buffer
     std::vector<int> la_list(GAMMA, cur_cost);
@@ -651,10 +656,16 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
               << " terminated_by=" << (no_improve >= NO_IMPROVE_MAX ? "NO_IMPROVE_MAX" : "T_MIN")
               << "\n";
 
+    // best_cost = fullCost(best_sched) + M_COVER * totalH2Units(best_sched)
+    // (invariant above). Strip the M_COVER term so final_cost is always a
+    // clean fullCost value, even if best_sched never reached H2-feasibility
+    // (i.e. best_sched == seed and totalH2Units(seed) > 0).
+    const int final_cost = best_cost - M_COVER * totalH2Units(prob, best_sched);
+
     nlohmann::json result = data;
     result["current_schedule"]          = best_sched;
     result["metadata"]["initial_cost"]  = initial_cost;
-    result["metadata"]["final_cost"]    = best_cost;
+    result["metadata"]["final_cost"]    = final_cost;
     return result;
 }
 
