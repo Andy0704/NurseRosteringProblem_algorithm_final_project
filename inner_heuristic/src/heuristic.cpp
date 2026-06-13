@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <map>
 #include <random>
 #include <set>
@@ -16,7 +17,7 @@ static const int COVER_WEIGHT     = 30;
 static const int CONSEC_WEIGHT    = 15;
 static const int FORBIDDEN_WEIGHT = 25;
 static const int TOTAL_ASSIGN_W   = 10;
-static const int SHIFT_OFF_REQ_W  = 5;
+static const int SHIFT_OFF_REQ_W  = 10;
 
 // ============================================================
 // Section 2: Data structures
@@ -207,6 +208,50 @@ static int coverageCostDay(const Problem& prob,
 }
 
 // ============================================================
+// Section 4a-bis: H2 deficit units for a single day (SA-only)
+// Same loop as coverageCostDay, but returns the raw count of
+// nurse-units below minimum (no COVER_WEIGHT). Used only by the
+// SA acceptance/best-update path -- never by runEvalOnly.
+// ============================================================
+static int coverageDeficitUnitsDay(const Problem& prob,
+                                   const std::vector<std::vector<int>>& sched,
+                                   int d)
+{
+    std::map<std::string, std::vector<int>> skill_count;
+    for (const auto& [sk, _] : prob.demand_by_skill)
+        skill_count[sk].assign(prob.num_shifts, 0);
+
+    for (int n = 0; n < prob.num_nurses; n++) {
+        int s = sched[n][d];
+        if (s == 0) continue;
+        for (const auto& sk : prob.nurses[n].skills)
+            if (skill_count.count(sk)) skill_count[sk][s]++;
+    }
+
+    int units = 0;
+    for (const auto& [sk, demands] : prob.demand_by_skill) {
+        const auto& cnt = skill_count.at(sk);
+        for (int s = 1; s < prob.num_shifts; s++) {
+            int deficit = demands[d][s - 1] - cnt[s];
+            if (deficit > 0) units += deficit;
+        }
+    }
+    return units;
+}
+
+// ============================================================
+// Section 4a-ter: total H2 deficit units across all days (SA-only)
+// ============================================================
+static int totalH2Units(const Problem& prob,
+                        const std::vector<std::vector<int>>& sched)
+{
+    int units = 0;
+    for (int d = 0; d < prob.num_days; d++)
+        units += coverageDeficitUnitsDay(prob, sched, d);
+    return units;
+}
+
+// ============================================================
 // Section 4b: Per-nurse cost breakdown struct + full cost function
 // ============================================================
 
@@ -343,28 +388,23 @@ static int fullCost(const Problem& prob,
 // ============================================================
 static int deltaTwoWaySwap(const Problem& prob,
                            std::vector<std::vector<int>>& sched,
-                           int n1, int n2, int d)
+                           int n1, int n2, int d, int M_COVER)
 {
+    int old_units   = coverageDeficitUnitsDay(prob, sched, d);
     int old_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n1).total
                     + nurseCostFull(prob, sched, n2).total;
 
     std::swap(sched[n1][d], sched[n2][d]);
 
-    // Hard coverage check: reject if swap creates any demand deficit on day d
-    int new_cov = coverageCostDay(prob, sched, d);
-    if (new_cov > 0) {
-        std::swap(sched[n1][d], sched[n2][d]); // revert
-        return 999999;
-    }
-
-    int new_partial = new_cov
+    int new_units   = coverageDeficitUnitsDay(prob, sched, d);
+    int new_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n1).total
                     + nurseCostFull(prob, sched, n2).total;
 
     std::swap(sched[n1][d], sched[n2][d]); // revert -- caller decides whether to keep
 
-    return new_partial - old_partial;
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
 }
 
 // ============================================================
@@ -374,27 +414,22 @@ static int deltaTwoWaySwap(const Problem& prob,
 // ============================================================
 static int deltaRandomDayOff(const Problem& prob,
                               std::vector<std::vector<int>>& sched,
-                              int n, int d)
+                              int n, int d, int M_COVER)
 {
+    int old_units   = coverageDeficitUnitsDay(prob, sched, d);
     int old_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
 
     const int old_shift = sched[n][d];
     sched[n][d] = 0;
 
-    // Hard coverage check: reject if day-off creates any demand deficit on day d
-    int new_cov = coverageCostDay(prob, sched, d);
-    if (new_cov > 0) {
-        sched[n][d] = old_shift; // revert
-        return 999999;
-    }
-
-    int new_partial = new_cov
+    int new_units   = coverageDeficitUnitsDay(prob, sched, d);
+    int new_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
 
     sched[n][d] = old_shift; // revert
 
-    return new_partial - old_partial;
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
 }
 
 // ============================================================
@@ -446,6 +481,15 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     auto    sched         = prob.schedule;
     const int initial_cost = fullCost(prob, sched);
 
+    // Fail loud (Rule 12): the MILP-seeded incoming schedule must already be
+    // H2-feasible (minimum coverage). SA may traverse temporary H2 violations,
+    // but it should never have to fix an infeasible starting point.
+    if (totalH2Units(prob, sched) > 0) {
+        std::cerr << "[nrp_heuristic] WARNING: incoming schedule violates H2 "
+                     "minimum coverage (totalH2Units=" << totalH2Units(prob, sched)
+                  << "). MILP seed should be H2-feasible.\n";
+    }
+
     int  cur_cost  = initial_cost;
     int  best_cost = initial_cost;
     auto best_sched = sched;
@@ -458,6 +502,19 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     const int    GAMMA         = 150;
 
     double T = computeT0(prob, sched);
+
+    // ============================================================
+    // M_COVER: big-M penalty for temporary H2 (minimum coverage)
+    // violations during SA search, derived from T0 (Knust 2019).
+    // M_COVER = ceil(-ln(p0) * T0), p0 = 0.05 (5% acceptance
+    // probability for a unit H2 violation at peak temperature T0)
+    // ~= 3.0 * T0. Proportional to deficit units (M_COVER * units),
+    // never flat. This penalty exists ONLY in the SA acceptance
+    // path (cur_cost) and the best_sched gate below -- it never
+    // enters coverageCostDay, nurseCostFull, fullCost, or the
+    // reported final_cost.
+    // ============================================================
+    const int M_COVER = static_cast<int>(std::ceil(-std::log(0.05) * T));
 
     // Late Acceptance circular buffer
     std::vector<int> la_list(GAMMA, cur_cost);
@@ -487,7 +544,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             if (!working.empty()) {
                 std::uniform_int_distribution<int> wd(0, (int)working.size() - 1);
                 int d = working[wd(rng)];
-                delta      = deltaRandomDayOff(prob, sched, n, d);
+                delta      = deltaRandomDayOff(prob, sched, n, d, M_COVER);
                 doff_n     = n;
                 doff_d     = d;
                 move_valid = true;
@@ -500,7 +557,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             int n2 = nurse_dist(rng);
             while (n2 == n1 && prob.num_nurses > 1) n2 = nurse_dist(rng);
             int d  = day_dist(rng);
-            delta  = deltaTwoWaySwap(prob, sched, n1, n2, d);
+            delta  = deltaTwoWaySwap(prob, sched, n1, n2, d, M_COVER);
             op_n1  = n1; op_n2 = n2; op_d = d;
             move_valid = true;
         }
@@ -519,7 +576,11 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             }
             cur_cost += delta;
 
-            if (cur_cost < best_cost) {
+            // best_sched gate: cur_cost includes the M_COVER surcharge, but the
+            // surcharge alone is not guaranteed to dominate on large-N instances.
+            // Require explicit H2-feasibility (totalH2Units==0) before promoting
+            // a state to best_sched, so the returned solution is always H2-clean.
+            if (cur_cost < best_cost && totalH2Units(prob, sched) == 0) {
                 best_cost  = cur_cost;
                 best_sched = sched;
                 no_improve = 0;
@@ -544,7 +605,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     return result;
 }
 
-// ============================================================
+// ===========================================================
 // runEvalOnly: evaluate the current_schedule in data and return
 // a per-component JSON breakdown (thin wrapper, no new logic).
 // total = S1 + S2 + S3 + S4 (matches evaluator structure; hard

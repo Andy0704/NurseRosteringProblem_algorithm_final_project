@@ -1,8 +1,9 @@
 """Segment 3: Broad SA ≡ evaluator identity test — 800 random schedules.
 
 Contexts: n021w4 weeks 0/1/2/3 with MILP-propagated history (4 × 200 = 800).
-BLOCK (< 1e-6): S2_consecutive_work, S3_consecutive_off, forbidden_violations.
-LOG only (known-divergent): S1_coverage (weight/source differ), S4_preferences (weight 5 vs 10).
+BLOCK (< 1e-6): S2_consecutive_work, S3_consecutive_off, S4_preferences,
+forbidden_violations.
+LOG only (known-divergent): S1_coverage (weight/source differ).
 
 On any BLOCK failure: print schedule, nurse histories, both-side breakdowns; stop immediately.
 """
@@ -92,7 +93,7 @@ def test_sa_identity_800():
     contexts = _build_week_contexts()
     rng = random.Random(RNG_SEED)
 
-    s1_diffs, s4_diffs = [], []
+    s1_diffs = []
     total_checked = 0
 
     for week_idx, data in enumerate(contexts):
@@ -112,14 +113,15 @@ def test_sa_identity_800():
 
             sa_s2 = sa_out["S2_consecutive_work"]
             sa_s3 = sa_out["S3_consecutive_off"]
+            sa_s4 = sa_out["S4_preferences"]
             sa_fb = sa_out["forbidden_violations"]
             ev_s2 = ev_out["S2_consecutive_work"]
             ev_s3 = ev_out["S3_consecutive_off"]
+            ev_s4 = ev_out["S4_preferences"]
             ev_fb = ev_out["forbidden_succession_violations"]
 
             # Log known-divergent (do not block)
             s1_diffs.append(abs(sa_out["S1_coverage"] - ev_out["S1_coverage"]))
-            s4_diffs.append(abs(sa_out["S4_preferences"] - ev_out["S4_preferences"]))
 
             # BLOCK assertions
             if abs(sa_s2 - ev_s2) >= 1e-6:
@@ -130,6 +132,10 @@ def test_sa_identity_800():
                 _block_fail(label, "S3", sched, data, sa_out, ev_out)
                 pytest.fail(f"{label}: S3 mismatch  sa={sa_s3}  eval={ev_s3}")
 
+            if abs(sa_s4 - ev_s4) >= 1e-6:
+                _block_fail(label, "S4", sched, data, sa_out, ev_out)
+                pytest.fail(f"{label}: S4 mismatch  sa={sa_s4}  eval={ev_s4}")
+
             if abs(sa_fb - ev_fb) >= 1e-6:
                 _block_fail(label, "forbidden", sched, data, sa_out, ev_out)
                 pytest.fail(f"{label}: forbidden mismatch  sa={sa_fb}  eval={ev_fb}")
@@ -138,17 +144,83 @@ def test_sa_identity_800():
 
     # ── known-divergent summary ──────────────────────────────────────────────
     nonzero_s1 = sum(1 for d in s1_diffs if d > 0)
-    nonzero_s4 = sum(1 for d in s4_diffs if d > 0)
     print(f"\n=== KNOWN-DIVERGENT LOG ({total_checked} schedules) ===")
     print(f"  S1_coverage  : nonzero_diff={nonzero_s1}/{total_checked}  "
           f"min={min(s1_diffs)}  max={max(s1_diffs)}  "
           f"mean={sum(s1_diffs)/len(s1_diffs):.1f}")
-    print(f"  S4_preferences: nonzero_diff={nonzero_s4}/{total_checked}  "
-          f"min={min(s4_diffs)}  max={max(s4_diffs)}  "
-          f"mean={sum(s4_diffs)/len(s4_diffs):.1f}")
-    if nonzero_s4 > 0:
-        # All S4 diffs should be exactly 0.5× (weight ratio 5:10)
-        ratios = [sa_out["S4_preferences"] / ev_out["S4_preferences"]
-                  for (sa_out, ev_out) in []]  # can't reconstruct here; just note
-        print(f"  S4 expected ratio: 0.5× (SHIFT_OFF_REQ_W=5 vs _W_PREF=10)")
-    print(f"  BLOCK items (S2, S3, forbidden): ALL CLEAN ✓")
+    print(f"  BLOCK items (S2, S3, S4, forbidden): ALL CLEAN ✓")
+
+
+def test_sa_h2_feasible_no_bigm_leak():
+    """SA with big-M must return an H2-feasible, big-M-free solution.
+
+    WHY (Rule 9): the big-M penalty lives only in the SA acceptance path.
+    This test proves three invariants:
+      1. SA moved: final_cost < initial_cost (no longer frozen).
+      2. H2-feasible: runEvalOnly(best_sched).S1_coverage == 0.
+      3. No big-M leak, via IDENTITY (not absolute equality):
+         |runEvalOnly(best_sched).total - evaluator.evaluate(best_sched)['total']|
+         < 1e-6. If M_COVER had leaked into runEvalOnly's totals, it would
+         diverge from the evaluator -- same standard as the 800-schedule
+         identity test.
+
+    # final_cost includes SA-guidance prorated S6 (weekly assignment bounds);
+    # runEvalOnly and penalty_evaluator measure per-week INRC-II score only.
+    # final_cost intentionally != evaluator_total -- this is by design, not a bug.
+    # The no-big-M-leak proof uses runEvalOnly vs evaluator identity (<1e-6).
+
+    Instance: n021w4 week 2 (MILP-seeded, sa_initial=60 > sa_final=45 --
+    week 1 was found to be trivially MILP-optimal already, sa_initial==
+    sa_final==0, so it cannot demonstrate SA movement).
+    """
+    # Chain MILP solves for weeks 0,1,2 to build an H2-feasible week-2 seed
+    # with correctly propagated history.
+    carry = None
+    data = None
+    for week in range(3):
+        data = parse(INSTANCE, week=week, history=0)
+        if carry is not None:
+            for n_idx in range(len(data["nurse_info"])):
+                data["nurse_info"][n_idx]["history"] = carry[n_idx]["history"]
+        model = MilpModel(data)
+        model.build()
+        sched, _ = model.solve(time_limit=15)
+        data["current_schedule"] = sched
+        carry = _end_of_week_history(sched, data["nurse_info"])
+    # data is now week 2, MILP-seeded
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(data, f)
+        fname = f.name
+    try:
+        res = subprocess.run(
+            [BINARY, fname, fname], capture_output=True, text=True, timeout=120,
+        )
+        assert res.returncode == 0, f"SA binary failed: {res.stderr.strip()}"
+        with open(fname, "r", encoding="utf-8") as fp:
+            sa_out = json.load(fp)
+    finally:
+        os.unlink(fname)
+
+    sa_initial = sa_out["metadata"]["initial_cost"]
+    sa_final   = sa_out["metadata"]["final_cost"]
+    best_sched = sa_out["current_schedule"]
+
+    # 1. SA moved (no longer frozen)
+    assert sa_final < sa_initial, (
+        f"SA appears frozen: sa_initial={sa_initial}  sa_final={sa_final}")
+
+    sa_eval = _run_eval_only(data, best_sched)
+
+    # 2. H2-feasibility of best_sched
+    assert sa_eval["S1_coverage"] == 0, (
+        f"best_sched violates H2: S1_coverage={sa_eval['S1_coverage']}")
+
+    # 3. No big-M leak: runEvalOnly(best_sched).total must match
+    # penalty_evaluator.evaluate(best_sched)['total'] exactly (<1e-6).
+    data_ev = copy.deepcopy(data)
+    data_ev["current_schedule"] = best_sched
+    ev_out = evaluate(best_sched, data_ev)
+    assert abs(sa_eval["total"] - ev_out["total"]) < 1e-6, (
+        f"big-M leak suspected: runEvalOnly(best_sched).total={sa_eval['total']} != "
+        f"evaluator.total={ev_out['total']}")

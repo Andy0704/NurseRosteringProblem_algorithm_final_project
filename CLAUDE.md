@@ -46,6 +46,13 @@ The architecture is divided into two decoupled layers:
    If a term is included in the total at layer A but not at layer B, this constitutes a structural homology contradiction.
    Simply "comparing the count of that term" will bypass rather than resolve the issue.
    The total membership of hard constraints (such as H3 forbidden=0) and soft constraints must be consistent across both layers.
+13. **Theoretical Precision in Multi-Objective Claims**:
+   Regarding the discussion of weighted-sum and Pareto, strictly adhere to the following:
+   - The official weights in INRC-II are scoring rules, not clinical preference quantifications.
+   - In discrete integer combinatorial problems, weighted sums can only find some Pareto solutions and do not guarantee finding the complete Pareto front.
+   - Methods for selecting solutions beyond the Pareto front are not limited to weighted sums (ε-constraint, reference point, lexicographic methods are all acceptable).
+   - S1–S7 have not been mathematically reformulated and should not be referred to as a 7-objective problem.
+   - The above four points were formally corrected in writing by the supervising professor on 2026-06-10 and constitute permanent constraints.
 
 
 
