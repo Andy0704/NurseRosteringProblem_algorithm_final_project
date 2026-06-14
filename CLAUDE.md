@@ -53,7 +53,16 @@ The architecture is divided into two decoupled layers:
    - Methods for selecting solutions beyond the Pareto front are not limited to weighted sums (ε-constraint, reference point, lexicographic methods are all acceptable).
    - S1–S7 have not been mathematically reformulated and should not be referred to as a 7-objective problem.
    - The above four points were formally corrected in writing by the supervising professor on 2026-06-10 and constitute permanent constraints.
-
+14. **Evidence standard for PROJECT_STATUS Known Issues:
+  Before adding any entry to "Known Issues" or "Open" in PROJECT_STATUS.md,
+  the issue must be backed by a reproducible command (e.g., "run X, see Y in
+  stderr") or an existing failing test. Narrative descriptions from prior
+  session reports are insufficient — they create self-referential hallucination
+  risk where a later session treats an unverified claim as fact.
+  
+  If a behavior was observed but is not currently reproducible, mark it as
+  "[Unconfirmed — last seen YYYY-MM-DD, not reproducible as of YYYY-MM-DD]"
+  rather than promoting it to a confirmed open issue.
 
 
 
