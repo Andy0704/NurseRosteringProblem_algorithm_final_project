@@ -129,6 +129,10 @@ done
 - 描述：提交當前進度到 git
 - 執行：git add -A && git commit -m "checkpoint: $(date +%Y%m%d_%H%M)"
 
+## skill_session_snapshot
+- 描述：session 结束时收集核心交接集 + 实测状态，供上传 project files
+- 执行：./session_snapshot.sh
+
 ## skill_chinese_output
 - 描述：切換 Claude 本次對話的回覆語言為繁體中文，程式碼、變數名稱、註解維持全英文
 - 使用方式：在 prompt 開頭加入以下指令

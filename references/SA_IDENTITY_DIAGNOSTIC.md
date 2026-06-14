@@ -1,5 +1,5 @@
 # SA ≡ Evaluator 同源诊断链（落盘记录）
-
+<!-- 2026-06-04 段1-3 全部完成,800 随机解验证通过 -->
 <!-- 用途：跨 session 交接的核心资产。本文件记录「SA cost function 与 penalty_evaluator 同源化」 -->
 <!-- 这条诊断线从 ratio 误诊到逐项同源的完整推理，丢失需重推多轮。执行切三段，中途至少两次交接。 -->
 
@@ -48,7 +48,7 @@ consecutive_days_off **0% 同时 > 0**（35.4% work-only / 64.6% off-only）。
 
 ---
 
-## ⚠️ 未解决：forbidden succession 的 total 归属矛盾（动手前必须定性）
+## 已解决(Change D)：forbidden succession 的 total 归属矛盾（动手前必须定性）
 
 逐项拆分后浮现的**最后一个结构性同源问题**：
 - evaluator 的 `_compute_forbidden_successions` 返回 raw count，**且不进 evaluate() total**。
