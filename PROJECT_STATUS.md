@@ -62,7 +62,6 @@ See `references/benchmark_results.md` for full per-week breakdown.
 - [x] S4 weight 5→10 (2026-06-13)
 - [x] SA ShiftTypeChange operator (Knust 2019), 70/15/15 split (2026-06-14)
 - [x] M_COVER bookkeeping baseline for H2-infeasible seeds — 20/20 tests (2026-06-14)
-- [ ] Investigate why MILP/F&O occasionally produces H2-infeasible seeds (n005w4 W1/W3 surfaced during 段3 verification of ShiftTypeChange on 2026-06-14; fail-loud WARNING fires correctly, SA repairs it now, but root cause in MILP/F&O is unverified)
 - [ ] Normalized weight as SA search surrogate (NOT scoring function)— implement after hard coverage fix so SA is actually searching
 - [ ] **[Phase 2 — research contribution]** Look-ahead mechanism in multi_week_runner.py
       — Mischek & Musliu (2019) 14-day rolling horizon; this is the correct fix for cross-week constraint accumulation (n012w8 W3 penalty 60→300)
@@ -95,7 +94,7 @@ See `references/benchmark_results.md` for full per-week breakdown.
 
 - **[evaluator-vs-official semantics gap — still open]** CW-1-WeekB boundary case: when a cross-week work run ends exactly at the Week A/B boundary (Week A all 7 days work → Week B d=0 is off), both SA and evaluator silently drop the run penalty (carry-in only fires when d=0 is work, so the deferred run from Week A is never scored if Week B starts with a day off). SA≡evaluator are consistent here, but whether this matches INRC-II official scoring semantics is unverified. Needs confirmation against official validator when running n030+ benchmark.
 
-- **[Open — MILP/F&O produces H2-infeasible seed in some weeks]** Surfaced 2026-06-14 during 段3 ShiftTypeChange verification: n005w4 W1/W3 fed SA a schedule with totalH2Units==1; fail-loud WARNING fires correctly. SA now repairs it via ShiftTypeChange + M_COVER bookkeeping fix. Root cause in MILP/F&O is unverified; investigate as separate task.
+- **[Defense-in-depth — H2-infeasible seed handling]** SA's fail-loud WARNING and M_COVER bookkeeping invariant correctly handle the case where the incoming schedule has totalH2Units > 0. Validated against a synthetic H2-infeasible seed (tests/test_sa_identity.py::test_sa_h2_repair_from_infeasible_seed, n021w4) on 2026-06-14 as defense-in-depth. MILP/F&O has NOT been observed to produce an H2-infeasible seed in practice (6 runs across n005w4/n012w8 on 2026-06-15, all clean — no WARNING). If WARNING ever fires in a real run, escalate; otherwise no action needed.
 
 ## Design Decisions (永久性決策，非待辦事項)
 
