@@ -252,6 +252,49 @@ static int totalH2Units(const Problem& prob,
 }
 
 // ============================================================
+// Section 4a-quater: H3 forbidden-succession violations on the
+// transition INTO day d, summed across all nurses (SA-only).
+// For d==0 this is the cross-week boundary transition
+// (history.last_shift_index -> sched[n][0]); for d>=1 it is the
+// within-week transition (sched[n][d-1] -> sched[n][d]). Mirrors
+// coverageDeficitUnitsDay's per-day, all-nurses pattern.
+// ============================================================
+static int forbiddenViolationsDay(const Problem& prob,
+                                   const std::vector<std::vector<int>>& sched,
+                                   int d)
+{
+    int count = 0;
+    for (int n = 0; n < prob.num_nurses; n++) {
+        int from, to;
+        if (d == 0) {
+            from = prob.nurses[n].hist_last_shift;
+            to   = sched[n][0];
+        } else {
+            from = sched[n][d - 1];
+            to   = sched[n][d];
+        }
+        if (from != 0 && to != 0 && prob.forbidden_succ.count({from, to}))
+            count++;
+    }
+    return count;
+}
+
+// ============================================================
+// Section 4a-quinquies: total H3 forbidden-succession violations
+// across all days (SA-only). Equal to the sum of
+// nurseCostFull(...).forbidden_hard over all nurses (D transitions
+// per nurse: 1 boundary + (D-1) within-week).
+// ============================================================
+static int totalForbiddenViolations(const Problem& prob,
+                                     const std::vector<std::vector<int>>& sched)
+{
+    int total = 0;
+    for (int d = 0; d < prob.num_days; d++)
+        total += forbiddenViolationsDay(prob, sched, d);
+    return total;
+}
+
+// ============================================================
 // Section 4b: Per-nurse cost breakdown struct + full cost function
 // ============================================================
 
@@ -388,12 +431,14 @@ static int fullCost(const Problem& prob,
 // ============================================================
 static int deltaTwoWaySwap(const Problem& prob,
                            std::vector<std::vector<int>>& sched,
-                           int n1, int n2, int d, int M_COVER)
+                           int n1, int n2, int d, int M_COVER, int M_FORBID)
 {
     int old_units   = coverageDeficitUnitsDay(prob, sched, d);
     int old_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n1).total
                     + nurseCostFull(prob, sched, n2).total;
+    int old_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     std::swap(sched[n1][d], sched[n2][d]);
 
@@ -401,10 +446,13 @@ static int deltaTwoWaySwap(const Problem& prob,
     int new_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n1).total
                     + nurseCostFull(prob, sched, n2).total;
+    int new_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     std::swap(sched[n1][d], sched[n2][d]); // revert -- caller decides whether to keep
 
-    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units)
+         + M_FORBID * (new_h3 - old_h3);
 }
 
 // ============================================================
@@ -414,11 +462,13 @@ static int deltaTwoWaySwap(const Problem& prob,
 // ============================================================
 static int deltaRandomDayOff(const Problem& prob,
                               std::vector<std::vector<int>>& sched,
-                              int n, int d, int M_COVER)
+                              int n, int d, int M_COVER, int M_FORBID)
 {
     int old_units   = coverageDeficitUnitsDay(prob, sched, d);
     int old_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
+    int old_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     const int old_shift = sched[n][d];
     sched[n][d] = 0;
@@ -426,10 +476,13 @@ static int deltaRandomDayOff(const Problem& prob,
     int new_units   = coverageDeficitUnitsDay(prob, sched, d);
     int new_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
+    int new_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     sched[n][d] = old_shift; // revert
 
-    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units)
+         + M_FORBID * (new_h3 - old_h3);
 }
 
 // ============================================================
@@ -440,11 +493,13 @@ static int deltaRandomDayOff(const Problem& prob,
 // ============================================================
 static int deltaShiftTypeChange(const Problem& prob,
                                  std::vector<std::vector<int>>& sched,
-                                 int n, int d, int s_new, int M_COVER)
+                                 int n, int d, int s_new, int M_COVER, int M_FORBID)
 {
     int old_units   = coverageDeficitUnitsDay(prob, sched, d);
     int old_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
+    int old_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     const int old_shift = sched[n][d];
     sched[n][d] = s_new;
@@ -452,10 +507,13 @@ static int deltaShiftTypeChange(const Problem& prob,
     int new_units   = coverageDeficitUnitsDay(prob, sched, d);
     int new_partial = coverageCostDay(prob, sched, d)
                     + nurseCostFull(prob, sched, n).total;
+    int new_h3 = forbiddenViolationsDay(prob, sched, d)
+               + (d + 1 < prob.num_days ? forbiddenViolationsDay(prob, sched, d + 1) : 0);
 
     sched[n][d] = old_shift; // revert
 
-    return (new_partial - old_partial) + M_COVER * (new_units - old_units);
+    return (new_partial - old_partial) + M_COVER * (new_units - old_units)
+         + M_FORBID * (new_h3 - old_h3);
 }
 
 // ============================================================
@@ -519,6 +577,18 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
                   << "). MILP seed should be H2-feasible.\n";
     }
 
+    // Fail loud (Rule 12): the MILP+F&O-seeded incoming schedule must already
+    // be H3-feasible (no forbidden successions). SA may traverse temporary
+    // H3 violations, but it should never have to fix an infeasible starting
+    // point.
+    const int initial_h3 = totalForbiddenViolations(prob, sched);
+    if (initial_h3 > 0) {
+        std::cerr << "[nrp_heuristic] WARNING: incoming schedule has "
+                  << initial_h3
+                  << " H3 forbidden-succession violations. MILP+F&O seed "
+                     "should be H3-feasible.\n";
+    }
+
     auto best_sched = sched;
 
     // SA / LA parameters
@@ -543,10 +613,28 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
     // ============================================================
     const int M_COVER = static_cast<int>(std::ceil(-std::log(0.05) * T));
 
-    // Invariant: cur_cost_k = fullCost(s_k) + M_COVER * totalH2Units(s_k) for all k.
-    // best_cost is only updated when totalH2Units(s_k)==0, so best_cost is always
-    // a clean fullCost value. final_cost = best_cost is therefore M_COVER-free.
-    int cur_cost  = initial_cost + M_COVER * initial_units;
+    // ============================================================
+    // M_FORBID: big-M penalty for temporary H3 (forbidden-succession)
+    // violations during SA search, mirroring M_COVER's derivation
+    // (Knust 2019, p0 = 0.05 -> M = ceil(-ln(p0) * T0) ~= 3.0 * T0).
+    // H3 is an INRC-II hard constraint (Ceschia 2019 sec 2.5.1). Like
+    // H2, big-M soft allows high-T exploration of H3-creating moves
+    // (6.5% of all accepts are H3-creating net-improving moves on
+    // n012w8 W3, per the 2026-06-15 trajectory diagnostic) while the
+    // best_sched gate below ensures the returned solution is always
+    // H3-clean. This penalty exists ONLY in the SA acceptance path
+    // (cur_cost) and the best_sched gate -- it never enters
+    // coverageCostDay, nurseCostFull, fullCost, or the reported
+    // final_cost.
+    // ============================================================
+    const int M_FORBID = static_cast<int>(std::ceil(-std::log(0.05) * T));
+
+    // Invariant: cur_cost_k = fullCost(s_k) + M_COVER * totalH2Units(s_k)
+    //                       + M_FORBID * totalForbiddenViolations(s_k) for all k.
+    // best_cost is only updated when totalH2Units(s_k)==0 AND
+    // totalForbiddenViolations(s_k)==0, so best_cost is always a clean
+    // fullCost value. final_cost = best_cost is therefore M_COVER-/M_FORBID-free.
+    int cur_cost  = initial_cost + M_COVER * initial_units + M_FORBID * initial_h3;
     int best_cost = cur_cost;
 
     // Late Acceptance circular buffer
@@ -577,7 +665,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             int n = nurse_dist(rng);
             int d = day_dist(rng);
             int s_new = (sched[n][d] + shift_offset_dist(rng)) % prob.num_shifts;
-            delta  = deltaShiftTypeChange(prob, sched, n, d, s_new, M_COVER);
+            delta  = deltaShiftTypeChange(prob, sched, n, d, s_new, M_COVER, M_FORBID);
             stc_n  = n; stc_d = d; stc_s = s_new;
             move_valid = true;
         } else if (op_pick >= 0.70) {
@@ -589,7 +677,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             if (!working.empty()) {
                 std::uniform_int_distribution<int> wd(0, (int)working.size() - 1);
                 int d = working[wd(rng)];
-                delta      = deltaRandomDayOff(prob, sched, n, d, M_COVER);
+                delta      = deltaRandomDayOff(prob, sched, n, d, M_COVER, M_FORBID);
                 doff_n     = n;
                 doff_d     = d;
                 move_valid = true;
@@ -602,7 +690,7 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             int n2 = nurse_dist(rng);
             while (n2 == n1 && prob.num_nurses > 1) n2 = nurse_dist(rng);
             int d  = day_dist(rng);
-            delta  = deltaTwoWaySwap(prob, sched, n1, n2, d, M_COVER);
+            delta  = deltaTwoWaySwap(prob, sched, n1, n2, d, M_COVER, M_FORBID);
             op_n1  = n1; op_n2 = n2; op_d = d;
             move_valid = true;
         }
@@ -623,11 +711,15 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
             }
             cur_cost += delta;
 
-            // best_sched gate: cur_cost includes the M_COVER surcharge, but the
-            // surcharge alone is not guaranteed to dominate on large-N instances.
-            // Require explicit H2-feasibility (totalH2Units==0) before promoting
-            // a state to best_sched, so the returned solution is always H2-clean.
-            if (cur_cost < best_cost && totalH2Units(prob, sched) == 0) {
+            // best_sched gate: cur_cost includes the M_COVER/M_FORBID surcharges,
+            // but the surcharges alone are not guaranteed to dominate on
+            // large-N instances. Require explicit H2- and H3-feasibility
+            // (totalH2Units==0 && totalForbiddenViolations==0) before
+            // promoting a state to best_sched, so the returned solution is
+            // always H2- and H3-clean.
+            if (cur_cost < best_cost
+                && totalH2Units(prob, sched) == 0
+                && totalForbiddenViolations(prob, sched) == 0) {
                 best_cost  = cur_cost;
                 best_sched = sched;
                 no_improve = 0;
@@ -657,10 +749,14 @@ nlohmann::json runHeuristic(const nlohmann::json& data) {
               << "\n";
 
     // best_cost = fullCost(best_sched) + M_COVER * totalH2Units(best_sched)
-    // (invariant above). Strip the M_COVER term so final_cost is always a
-    // clean fullCost value, even if best_sched never reached H2-feasibility
-    // (i.e. best_sched == seed and totalH2Units(seed) > 0).
-    const int final_cost = best_cost - M_COVER * totalH2Units(prob, best_sched);
+    //           + M_FORBID * totalForbiddenViolations(best_sched)
+    // (invariant above). Strip both surcharge terms so final_cost is always
+    // a clean fullCost value, even if best_sched never reached H2-/H3-
+    // feasibility (i.e. best_sched == seed and totalH2Units(seed) > 0 or
+    // totalForbiddenViolations(seed) > 0).
+    const int final_cost = best_cost
+                          - M_COVER  * totalH2Units(prob, best_sched)
+                          - M_FORBID * totalForbiddenViolations(prob, best_sched);
 
     nlohmann::json result = data;
     result["current_schedule"]          = best_sched;
