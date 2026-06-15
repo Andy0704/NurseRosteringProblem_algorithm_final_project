@@ -137,6 +137,100 @@ addition to `totalH2Units(sched) == 0`. Re-running the same n012w8 weeks
 
 ---
 
+## W3 Spike Localization (H1 vs H2 experiment)
+
+Following the post-H3-fix re-measurement above, W3's `total=285` (all S2,
+i.e. consecutive-working-days violations) is 69.5% of the entire 8-week
+total. Before designing Phase 2, this section distinguishes whether the
+spike is caused by W2's carry-in history (cross-week, Hypothesis 1) or is
+intrinsic to W3's own week-data (myopic, Hypothesis 2), via two runs of
+n012w8 W3 through the same MILP+F&O+SA pipeline:
+
+- **Run A (baseline)**: carry-in history propagated W0->W1->W2 via
+  `_end_of_week_history` (the same setup as the post-H3-fix table above).
+- **Run B (synthetic clean history)**: `inrc2_parser.parse(instance_dir,
+  week=3, history=0)` — this loads W3's demand file (`WD-n012w8-3.json`)
+  together with the canonical zero-history file `H0-n012w8-0.json` (the
+  same file used for week 0; `history` only selects the `H0-*` file, not
+  the demand week). No history was hand-constructed (Rule 14).
+
+### Run A (W0->W1->W2 carry-in, baseline)
+
+| sa_initial | sa_final | S1 | S2 | S3 | S4 | forbidden (H3) | total |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 420 | 415 | 0 | 285 | 0 | 0 | 0 | 285 |
+
+### Run B (canonical zero history, W3 demand)
+
+| sa_initial | sa_final | S1 | S2 | S3 | S4 | forbidden (H3) | total |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 100 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+### Delta (A - B)
+
+| Component | Run A | Run B | Delta |
+|---|---:|---:|---:|
+| S1_coverage | 0 | 0 | 0 |
+| S2_consecutive_work | 285 | 0 | **285** |
+| S3_consecutive_off | 0 | 0 | 0 |
+| S4_preferences | 0 | 0 | 0 |
+| forbidden_succession_violations | 0 | 0 | 0 |
+| **total** | **285** | **0** | **285** |
+
+### W2-end carry-in: consecutive_working_days vs. contract max
+
+The carry-in history that Run A used (`_end_of_week_history` after W2's SA
+output), per nurse:
+
+| nurse | consec_working_days_at_W2_end | contract_max | stretch tail |
+|---|---:|---:|---|
+| Alice | 4 | 5 | near |
+| Bob | 5 | 5 | **yes** |
+| John | 5 | 5 | **yes** |
+| Kate | 0 | 5 | no |
+| Mary | 5 | 5 | **yes** |
+| Paul | 5 | 5 | **yes** |
+| Arthur | 0 | 5 | no |
+| Pier | 5 | 5 | **yes** |
+| Lucy | 2 | 5 | no |
+| Maggie | 3 | 5 | no |
+| Patrick | 0 | 5 | no |
+| Jane | 0 | 5 | no |
+
+5 of 12 nurses (Bob, John, Mary, Paul, Pier) ended W2 already *at* their
+contract's `maximumNumberOfConsecutiveWorkingDays` (5), and one more
+(Alice) ended one day short (4/5, "near"). Each of these nurses is
+therefore forced to take day 0 of W3 off (or risk an immediate S2
+over-max violation) purely because of their W2 end-state — independent of
+W3's own demand.
+
+### Interpretation
+
+- **Run B (S2=0, total=0) is dramatically lower than Run A (S2=285,
+  total=285)** — the full delta of 285 is attributable to the W0->W1->W2
+  carry-in history, not to W3's own week-data. With a clean/zero history,
+  W3's demand alone produces a perfectly satisfiable schedule (total=0).
+- **Hypothesis 1 is confirmed**: the W3 S2=285 spike is a **cross-week
+  pathology** caused by W2's end-of-week state, not a myopic
+  intrinsic-difficulty of W3 itself.
+- **Mechanism**: 5/12 nurses ended W2 at their `max_consec_work` (5/5)
+  and 1/12 ended one day short (4/5) — exactly the "stretch tail" pattern
+  Mischek's S10* targets (p. 137-138): a work-stretch that has already
+  reached (or is one day from) its maximum at the week boundary, forcing
+  a day off in week `w+1` regardless of week `w+1`'s own demand. With 6
+  of 12 nurses simultaneously in this state at the W2->W3 boundary, W3's
+  MILP+F&O+SA must absorb a large, synchronized forced-day-off pattern
+  that W3's demand data alone does not require, producing the S2=285
+  spike.
+- **Design-space implication (not a design — per task scope)**: Phase 2
+  should enter the **cross-week / carry-in design space** (Mischek
+  S10*-style end-of-week stretch avoidance, or ORTEC-style connection
+  soft-constraints in W2's own model, Section 2 above) rather than
+  single-week heuristic or MILP-reformulation changes to W3 in isolation
+  — Run B shows W3's own week-data is not the bottleneck.
+
+---
+
 ## 2. INRC-II Finalist Cross-Week Strategy Survey
 
 Source: Ceschia et al. (2019), *Ann. Oper. Res.* 274, 171–186
