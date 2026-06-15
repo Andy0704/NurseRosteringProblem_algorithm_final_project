@@ -62,6 +62,69 @@ schedule, with `history=0` (carry-in propagated week-to-week via
   W3–W6. This is the quantity Phase 2 look-ahead should aim to reduce,
   particularly the H3 violations (hard constraint) and the W3 S3 spike.
 
+### Post-H3-fix re-measurement (2026-06-15)
+
+The 2026-06-15 fix (`fix: H3 forbidden_succession leak in SA (M_FORBID +
+best_sched gate, p0=0.05)`) added an `M_FORBID` big-M penalty (mirroring
+`M_COVER` for H2) to all three SA delta functions, and extended the
+`best_sched` gate to require `totalForbiddenViolations(sched) == 0` in
+addition to `totalH2Units(sched) == 0`. Re-running the same n012w8 weeks
+0-7 measurement with the fixed binary:
+
+| Wk | sa_initial | sa_final | S1 | S2 | S3 | S4 | forbidden (H3) | total |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 130 | 130 | 0 |   0 |  0 | 10 | 0 |  10 |
+| 1 | 145 | 145 | 0 |  15 |  0 | 10 | 0 |  25 |
+| 2 | 185 | 170 | 0 |   0 | 30 | 10 | 0 |  40 |
+| 3 | 420 | 415 | 0 | 285 |  0 |  0 | 0 | 285 |
+| 4 | 140 | 140 | 0 |   0 |  0 | 20 | 0 |  20 |
+| 5 | 120 | 120 | 0 |   0 |  0 |  0 | 0 |   0 |
+| 6 | 130 | 130 | 0 |   0 |  0 | 10 | 0 |  10 |
+| 7 | 130 | 130 | 0 |   0 |  0 | 20 | 0 |  20 |
+| **SUM** | | | 0 | 300 | 30 | 80 | **0** | **410** |
+
+#### Side-by-side: pre-fix vs. post-fix
+
+| Wk | pre-fix total | pre-fix H3 | post-fix total | post-fix H3 |
+|---:|---:|---:|---:|---:|
+| 0 |  10 |  0 |  10 | 0 |
+| 1 |  25 |  0 |  25 | 0 |
+| 2 |  40 |  0 |  40 | 0 |
+| 3 | 120 | 15 | 285 | 0 |
+| 4 |  95 | 15 |  20 | 0 |
+| 5 |  70 | 16 |   0 | 0 |
+| 6 | 105 |  2 |  10 | 0 |
+| 7 |  20 |  0 |  20 | 0 |
+| **SUM** | **485** | **48** | **410** | **0** |
+
+#### Interpretation
+
+- **H3 forbidden-succession violations are fully eliminated** (48 -> 0
+  across the whole 8-week horizon), confirming the M_FORBID + best_sched
+  gate fix works as designed. No fail-loud "incoming schedule has N H3
+  violations" warning fired for any week (MILP+F&O seeds remained
+  H3-clean, as expected from the diagnostic).
+- **The total penalty over weeks 0-7 dropped from 485 to 410** (-15.5%),
+  so the fix is a net improvement at the horizon level.
+- **However, the cross-week pathology did not disappear -- it relocated
+  to W3.** Pre-fix, W3's total was 120 (S2=45, S3=75, forbidden=15);
+  post-fix, W3's total is 285, entirely S2 (consecutive working days),
+  with S3 and forbidden both now 0. W4-W7 improved dramatically
+  (95/70/105/20 -> 20/0/10/20), consistent with the hypothesis that the
+  H3 violations in W3-W6 were a *secondary* symptom of an underlying
+  W2->W3 history-carry-in pathology: once SA is forced to resolve the
+  W3 boundary state without using forbidden successions as an escape
+  valve, it pays the cost as S2 in W3 itself instead of leaking H3
+  violations (and downstream S2/S3 spikes) into W4-W6.
+- **Net effect for Phase 2**: the *hard*-constraint problem (H3) is
+  solved, and the *total* improved, but the single-week S2=285 spike in
+  W3 is now the dominant remaining residual (69.5% of the entire
+  8-week total). This is a sharper, more concentrated target than the
+  previous diffuse S2(225)+S3(150)+forbidden(48) picture, and is exactly
+  the kind of single-week, history-carry-in-driven spike that Mischek's
+  S9*/S10* and ORTEC's "connection feasibility" soft constraints
+  (Section 2 above) are designed to address.
+
 ### Footnote — myopic baseline comparison caveat
 
 > Myopic baseline number (n012w8 W3 = 390, S2 = 300) is taken from
