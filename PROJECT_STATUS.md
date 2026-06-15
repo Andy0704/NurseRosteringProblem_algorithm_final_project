@@ -38,6 +38,7 @@ See `references/benchmark_results.md` for full per-week breakdown.
 
 ## Recent Changes
 
+- [2026-06-15] research: normalized-weight SA surrogate investigated (n012w8 magnitude imbalance ≤3×, at threshold; reflects INRC-II intentional weight calibration); declined per Rule 14. No code change.
 - [2026-06-14] fix: M_COVER bookkeeping baseline for H2-infeasible seeds (cur_cost init now includes M_COVER * totalH2Units(seed), so final_cost = best_cost - M_COVER * totalH2Units(best_sched) is always a clean fullCost value); +1 targeted test (test_sa_h2_repair_from_infeasible_seed) → 20/20 pass; n005w4 W1/W3 final_cost = 30/30 (verified via run_4week_full_pipeline.py)
 - [2026-06-14] feat: SA ShiftTypeChange operator (Knust 2019); 70/15/15 split TwoWaySwap/RandomDayOff/ShiftTypeChange; first operator capable of Off→work transitions; improvement on n005w4/n012w8/n021w4 from 0/3.5/18.8% to ~58/44/19% (n012 partially CBC non-determinism)
 - [2026-06-13] fix: SA hard coverage reject → M_COVER big-M soft penalty (Knust 2019, p0=0.05); best_sched gated on H2-feasibility (totalH2Units==0); SHIFT_OFF_REQ_W 5→10 (S4 homologous); 19/19 tests
@@ -62,7 +63,7 @@ See `references/benchmark_results.md` for full per-week breakdown.
 - [x] S4 weight 5→10 (2026-06-13)
 - [x] SA ShiftTypeChange operator (Knust 2019), 70/15/15 split (2026-06-14)
 - [x] M_COVER bookkeeping baseline for H2-infeasible seeds — 20/20 tests (2026-06-14)
-- [ ] Normalized weight as SA search surrogate (NOT scoring function)— implement after hard coverage fix so SA is actually searching
+- [investigated, declined 2026-06-15] Normalized weight as SA search surrogate. 段1 measurement on n012w8 (4 weeks) showed component magnitude imbalance ≤3× (S1/S4=3.0, S2/S4=3.0, S3/S4=1.5), at/below the implementation threshold. The ratios reflect INRC-II's calibrated clinical-priority weighting (Rule 13) rather than a search-pathology artifact. Equal-weight surrogate would invert intentional calibration with no evidence of benefit. Closed out per Rule 14 evidence standard.
 - [ ] **[Phase 2 — research contribution]** Look-ahead mechanism in multi_week_runner.py
       — Mischek & Musliu (2019) 14-day rolling horizon; this is the correct fix for cross-week constraint accumulation (n012w8 W3 penalty 60→300)
 - [ ] Benchmark n021w4 + n012w8 full 4-week MILP+F&O+SA (cross-week not yet verified)
