@@ -272,12 +272,173 @@ Table 1 (finalists, p. 181), Table 2 (final ranking, p. 182), and Sect. 6.1
 
 ---
 
-## 3. Design Options
+## 3. Selected Design: S10* Stretch-Tail Penalty (段0 spec)
 
-*TBD in 段2.*
+Targets the W2->W3 spike localized above: 5/12 nurses ended W2 at
+`max_consec_work=5/5`, 1/12 at `4/5`, forcing a synchronized day-off
+pattern in W3 unrelated to W3's own demand. This section specifies a
+single-mechanism, surgical adaptation of Mischek & Musliu (2019) S10*
+("Unresolvable patterns", p. 137-139, eq. 40) for `MilpModel.build()`.
+
+### Q1 — Threshold
+
+**Answer: `threshold = M_w - 1`** (one less than
+`maximumNumberOfConsecutiveWorkingDays`).
+
+Mischek's eq. 40 (p. 138) is shift-type-specific and considers a trailing
+block of `>= w_n^+ - sigma_s^-` shifts (p. 137, Fig. 4/5) — i.e. the
+*general* condition is "the trailing work-stretch is already close enough
+to `w_n^+` (max work stretch) that no valid continuation into next week
+exists for some shift type `s`". Our simplification (Q4) restricts this
+to plain `consecutive_working_days` (ignores per-shift-type `sigma_s`),
+so the binding case is the boundary one: the trailing run *equals*
+`M_w` (fully saturated at week end) — exactly the condition observed for
+Bob/John/Mary/Paul/Pier (5/5) in the localization table above. Setting
+`threshold = M_w - 1` means the penalty fires only when the trailing run
+reaches `M_w` (the "near" case, Alice at 4/5, is not penalized — see Q4
+caveat).
+
+### Q2 — Penalty form
+
+**Answer: linear**, `z_n >= tail_run_proxy_n - threshold`, `z_n >= 0`.
+Mischek's eq. 40 is itself linear in the surplus variable `C_n^{S10*}`
+(p. 138) — no quadratic term anywhere in S6*-S10*. Our `z_n` plays the
+same role as `C_n^{S10*}`.
+
+`tail_run_proxy_n` is a **window-sum relaxation expression**, mirroring
+the existing S1 window-sum pattern (`milp_model.py:205-211`,
+`pulp.lpSum(w[d:d+M_w+1]) <= M_w + p`):
+
+```
+tail_run_proxy_n = sum(w[D - M_w : D])   # last M_w days of the week
+```
+
+where `w[d] = 1 - x[n][d][0]` (already defined, `milp_model.py:184`).
+`tail_run_proxy_n` ranges `0..M_w`. If `tail_run_proxy_n == M_w`, all of
+the last `M_w` days are worked, which (since there is no room for a gap)
+implies a true trailing run of exactly `M_w` consecutive working days
+ending at week-end — the fully-saturated "stretch tail" condition. This
+reuses the existing `w[]` expressions; no new per-day run-length tracking
+variables are introduced (Rule 3).
+
+### Q3 — Weight alpha (re-verified per Clarification 1, 2026-06-16)
+
+**Mischek's W_{S10*} = 15 maps to option (a) — shift-stretch-length
+(same-shift-type, CS2a/b); our W3 violations are option (b) —
+consecutive working days (any shift, CS2c/d). α = 15 is locked for
+our system.**
+
+**Mischek's S2 decomposition** (objective formula, p. 127–128):
+`f = ... + 15·CS2a/b + 30·CS2c/d + ...`, where:
+- **CS2a/b** (weight **15**): violations of `MinConsecutiveShiftDays` /
+  `MaxConsecutiveShiftDays` per shift type — same-shift-type stretch
+  length, the "shift-stretch-length constraint" Mischek cites on p. 139.
+- **CS2c/d** (weight **30**): violations of `MinConsecutiveWorkingDays` /
+  `MaxConsecutiveWorkingDays` per contract — any-shift consecutive
+  working days.
+
+Mischek p. 139 verbatim: *"a violation of this constraint directly results
+in a violation of at least one shift-stretch-length constraint in the next
+week and thus warrants a weight of 15 (as if the violation had already
+occurred)"*. Table 1 (p. 140) confirms `W_{S10*} = 15`.  
+**W_{S10*} = 15 = shift-stretch weight = CS2a/b weight = option (a).**
+
+**Our W3 violations are option (b) — confirmed by direct trace:**
+
+`penalty_evaluator._compute_s2_s3` (`penalty_evaluator.py:87–107`) checks
+`contract.get("minimumNumberOfConsecutiveWorkingDays")` /
+`"maximumNumberOfConsecutiveWorkingDays"` and fires when any working run
+(`row[d] > 0`, shift-type agnostic) exceeds `max_cw`. Traced violation
+from the W3 MILP output (no-S10* baseline):
+
+> **Nurse 1 (FullTime)**: carry-in `prior_work=5`, W3 days 0–4 worked
+> with shifts Night→Late→Late→Late→Late (**4 different shift types**),
+> run_len = 10, max_cw = 5, excess = 5 days, penalty = 5 × 15 = 75.
+> `same_type=False` confirms this is a working-days (CS2c/d) violation,
+> **not** a same-shift-type (CS2a/b) violation.
+
+4 nurses in this state (Nurses 1, 2, 4, 7); total S2 = 300 from MILP
+output (SA reduces to 285). All four are any-shift working-day violations.
+
+**α decision: α = W_CONSEC = 15 (locked).**
+
+In our system, `penalty_evaluator._W_CONSEC = 15` (`penalty_evaluator.py:23`)
+charges each excess consecutive-working-day at 15. The S10* "as if the
+violation had already occurred" semantic requires α to match the actual
+cost our evaluator charges for the violation type. Our evaluator charges
+15 per violation-day for this constraint (CS2c/d), so α = 15 is correct
+for our system.
+
+*Open question (separate task, out of scope here)*: Mischek's CS2c/d = 30
+while our `_W_CONSEC = 15` — our evaluator may be underweighting
+consecutive-working-days violations relative to the INRC-II official
+scoring rule. If `_W_CONSEC` is later corrected to 30, α should be
+updated to match. For this segment, α must match our evaluator's current
+actual charge, not a hypothetical corrected weight.
+
+### Q4 — Coverage scope (updated per Clarification 2, 2026-06-16)
+
+**Penalty covers `consecutive_working_days` only.**
+
+Explicitly excluded:
+- **`consecutive_same_shift_type` (CS2a/b sub-component)**: not observed
+  spiking in the localization measurement (`S2_consecutive_work = 285`,
+  same-shift-type violations not tracked in our evaluator), Rule 10 defers.
+  Note: the Q3 trace reveals that Nurses 2/4/7 (all-Night runs crossing
+  the W2→W3 boundary) have simultaneous CS2a/b violations that our
+  evaluator does not capture — documented for a future same-shift-type
+  evaluation pass, not addressed in this segment.
+- **`consecutive_days_off` (S3)**: zero in both Run A (S3=0) and Run B
+  (S3=0) of the localization experiment, Rule 10 defers.
+
+Either could be extended later if a separate localization shows them
+dominant in a different instance or week.
+
+**Q1 caveat**: `threshold = M_w - 1` only fires at full saturation
+(`tail_run_proxy_n == M_w`), so the "near" case (Alice, 4/5) is not
+penalized. This is the paper's published value and is used as-is.
+
+**Evaluation policy (Clarification 3, 2026-06-16)**: 段3 runs
+`threshold = M_w - 1` as the **single attempt** (Mischek's published
+value). If W3 is not substantially resolved, STOP and report — no retry
+within this segment. Further adjustments (different α, different
+threshold, additional mechanisms) are decided in a new segment per Rule
+14 evidence standard.
+
+### Q5 — Applied when
+
+**Answer: every week `k < num_weeks - 1`** (i.e. all weeks except the
+final week of the instance). Mischek p. 138: *"all constraints introduced
+in this section should be ignored in the last week, as there is no
+further week to influence."* For n012w8 (`num_weeks=8`), this applies to
+W0-W6 and is skipped for W7 — matches the task's framing ("W6 is
+pre-final so look-ahead helps W7 - apply").
+
+### Implementation sketch (for 段1, after confirmation)
+
+For each nurse `n_idx` in `MilpModel.build()`, when `is_final_week is
+False`:
+
+```python
+M_w = contract.get("maximumNumberOfConsecutiveWorkingDays", D)
+tail_run_proxy = pulp.lpSum(w[max(0, D - M_w):D])
+z = pulp.LpVariable(f"z_s10_{n_idx}", lowBound=0)
+model += (z >= tail_run_proxy - (M_w - 1), f"S10star_{n_idx}")
+penalty_terms.append((W_CONSEC, z))   # alpha = W_CONSEC = 15
+```
+
+Added to `penalty_terms` exactly like existing S1-S7 terms (same sign,
+same objective `pulp.lpSum(wt * pv for wt, pv in penalty_terms)`) — no
+new objective-assembly logic. Because `penalty_terms` only feeds the MILP
+*search* objective and is never read back by `penalty_evaluator`,
+`runEvalOnly`, or `fullCost`, `z_s10_*` is automatically excluded from the
+reported INRC-II total (Rule 12) without any extra bookkeeping.
 
 ---
 
 ## 4. Selected Design
 
-*TBD after human review.*
+S10* stretch-tail penalty as specified in Section 3 above. Spec confirmed
+with Clarifications 1–3 (2026-06-16): α = 15 (locked, Q3 verified),
+explicit CS2a/b and S3 exclusions (Q4), single-attempt evaluation policy
+(Clarification 3). Proceeding to 段1 implementation.
