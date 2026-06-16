@@ -13,6 +13,12 @@ Contract used for all cases unless noted:
   min_consec_work=2, max_consec_work=5, min_consec_off=1, max_consec_off=4
   min_assign=0, max_assign=28 (weekly bounds: [0,7] — never fires)
   No shift-off requests; No forbidden successions.
+
+W-2/W-3 NOTE: S2 and S3 identity is intentionally broken between W-2 (evaluator
+CONSEC_WEIGHT corrected to 30 per Ceschia 2019) and W-3 (heuristic.cpp correction).
+7 tests (CW-2, CW-4, CW-min, CO-1, CO-2, CO-3, CW-1-WeekB) will FAIL until W-3.
+expected_s2/s3 below reflect the correct spec weight (30); SA still returns weight-15
+values. Identity is restored in W-3.
 """
 
 import json
@@ -146,9 +152,9 @@ def test_CW1_all7_deferred():
 def test_CW2_works0to4_off5to6():
     """CW-2: works d=0..4, off d=5..6, hist_work=3. run=3+5=8 > max=5 → penalty."""
     # run at d=0: 1+3=4, d=1: 5, d=2: 6, d=3: 7, d=4: 8. Transition at d=5.
-    # penalty = (8-5)*15 = 45
+    # penalty = (8-5)*30 = 90
     _assert_case("CW-2", [1,1,1,1,1,0,0], hist_cw=3, hist_co=0,
-                 expected_s2=45, expected_s3=0)
+                 expected_s2=90, expected_s3=0)
 
 
 def test_CW3_off0_works1to4_off5to6():
@@ -160,15 +166,15 @@ def test_CW3_off0_works1to4_off5to6():
 
 def test_CW4_works0to1_off2to6():
     """CW-4: works d=0..1, off d=2..6, hist_work=4. run=4+2=6 > max=5 → penalty."""
-    # penalty = (6-5)*15 = 15
+    # penalty = (6-5)*30 = 30
     _assert_case("CW-4", [1,1,0,0,0,0,0], hist_cw=4, hist_co=0,
-                 expected_s2=15, expected_s3=0)
+                 expected_s2=30, expected_s3=0)
 
 
 def test_CW_min_isolated_single_day():
-    """CW-min: works d=0 only, hist_work=0. run=1 < min=2 → penalty=(2-1)*15=15."""
+    """CW-min: works d=0 only, hist_work=0. run=1 < min=2 → penalty=(2-1)*30=30."""
     _assert_case("CW-min", [1,0,0,0,0,0,0], hist_cw=0, hist_co=0,
-                 expected_s2=15, expected_s3=0)
+                 expected_s2=30, expected_s3=0)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -177,29 +183,29 @@ def test_CW_min_isolated_single_day():
 
 def test_CO1_off0to4_works5to6():
     """CO-1: off d=0..4, works d=5..6, hist_off=3. off_run=3+5=8 > max=4 → penalty."""
-    # penalty = (8-4)*15 = 60
+    # penalty = (8-4)*30 = 120
     _assert_case("CO-1", [0,0,0,0,0,1,1], hist_cw=0, hist_co=3,
-                 expected_s2=0, expected_s3=60)
+                 expected_s2=0, expected_s3=120)
 
 
 def test_CO2_works0_off1to4_works5to6():
     """CO-2: works d=0, off d=1..4, works d=5..6, hist_off=3. hist NOT carried (d=0 work).
 
     S2: d=0 is an isolated work day (run=1). d=1 is off → run ends.
-        run(1) < min_cw(2) → pen=(2-1)*15=15.
+        run(1) < min_cw(2) → pen=(2-1)*30=30.
     S3: off run d=1..4 = 4 days. hist_co=3 but d=0 is work so carry-in
         condition (d==0 && hist_cw==0) is FALSE → run starts fresh at d=1.
         run=4 == max_co=4 → no penalty.
     """
     _assert_case("CO-2", [1,0,0,0,0,1,1], hist_cw=0, hist_co=3,
-                 expected_s2=15, expected_s3=0)
+                 expected_s2=30, expected_s3=0)
 
 
 def test_CO3_off0to2_works3to6():
     """CO-3: off d=0..2, works d=3..6, hist_off=2. off_run=2+3=5 > max=4 → penalty."""
-    # penalty = (5-4)*15 = 15
+    # penalty = (5-4)*30 = 30
     _assert_case("CO-3", [0,0,0,1,1,1,1], hist_cw=0, hist_co=2,
-                 expected_s2=0, expected_s3=15)
+                 expected_s2=0, expected_s3=30)
 
 
 def test_Boundary_works0to4_exact_max():
@@ -218,7 +224,7 @@ def test_CW1_crossweek_continuation():
     Week A: all 7 days work, hist_cw=3. Run=10 but never ends → deferred. s2=0.
     Week B: d=0 WORK (continues the run), d=1 off → run ends.
             run = 1 + hist_cw(10) = 11 at d=0. d=1 off → transition.
-            run(11) > max_cw(5) → pen=(11-5)*15=90.
+            run(11) > max_cw(5) → pen=(11-5)*30=180.
     Note: d=0 must be work to trigger carry-in (d==0 && hist_cw>0).
           If d=0 were off, carry-in never fires and the deferred run is silently
           dropped by both SA and evaluator (boundary semantics — see Known Issues).
@@ -227,6 +233,6 @@ def test_CW1_crossweek_continuation():
     _assert_case("CW-1-WeekA", [1,1,1,1,1,1,1], hist_cw=3, hist_co=0,
                  expected_s2=0, expected_s3=0)
 
-    # Week B: d=0 work continues run; d=1 off ends it. run=11 > max=5 → pen=90
+    # Week B: d=0 work continues run; d=1 off ends it. run=11 > max=5 → pen=180
     _assert_case("CW-1-WeekB", [1,0,0,0,0,0,0], hist_cw=10, hist_co=0,
-                 expected_s2=90, expected_s3=0)
+                 expected_s2=180, expected_s3=0)

@@ -19,7 +19,11 @@ _DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 _DAY_TO_IDX = {d: i for i, d in enumerate(_DAY_NAMES)}
 
 _W_COVERAGE = 30
-_W_CONSEC = 15
+# Ceschia 2019 p.176 §2.5.1: S2 CS2c/d (any-shift consec work days) = 30,
+# S3 (consec days off) = 30. Both use this constant.
+# NOTE: S2 CS2a/b (same-shift-type consec, spec weight 15) is not yet
+# implemented; when added in W-4 it will need a separate _W_CONSEC_SAME = 15.
+_W_CONSEC = 30
 _W_PREF = 10
 
 

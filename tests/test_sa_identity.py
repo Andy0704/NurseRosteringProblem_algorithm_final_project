@@ -6,6 +6,10 @@ forbidden_violations.
 LOG only (known-divergent): S1_coverage (weight/source differ).
 
 On any BLOCK failure: print schedule, nurse histories, both-side breakdowns; stop immediately.
+
+W-2/W-3 NOTE: S2_consecutive_work and S3_consecutive_off identity is intentionally
+broken between W-2 (evaluator CONSEC_WEIGHT corrected to 30 per Ceschia 2019) and
+W-3 (heuristic.cpp CONSEC_WEIGHT correction). Both tests below FAIL until W-3.
 """
 
 import copy
@@ -124,6 +128,7 @@ def test_sa_identity_800():
             s1_diffs.append(abs(sa_out["S1_coverage"] - ev_out["S1_coverage"]))
 
             # BLOCK assertions
+            # W-2/W-3: S2 and S3 FAIL here (eval weight=30, SA weight still=15) until W-3.
             if abs(sa_s2 - ev_s2) >= 1e-6:
                 _block_fail(label, "S2", sched, data, sa_out, ev_out)
                 pytest.fail(f"{label}: S2 mismatch  sa={sa_s2}  eval={ev_s2}")
@@ -218,6 +223,7 @@ def test_sa_h2_feasible_no_bigm_leak():
 
     # 3. No big-M leak: runEvalOnly(best_sched).total must match
     # penalty_evaluator.evaluate(best_sched)['total'] exactly (<1e-6).
+    # W-2/W-3: FAILS here (total diverges via S2/S3 weight 15 vs 30) until W-3.
     data_ev = copy.deepcopy(data)
     data_ev["current_schedule"] = best_sched
     ev_out = evaluate(best_sched, data_ev)
