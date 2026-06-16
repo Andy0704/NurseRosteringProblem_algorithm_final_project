@@ -1,15 +1,98 @@
 # INRC-II Official Weights vs Implementation Audit
 
-**Date:** 2026-06-16  
+**Date:** 2026-06-16 (initial); spec column verified 2026-06-17  
 **Scope:** penalty_evaluator.py, heuristic.cpp, milp_model.py  
 **Trigger:** Q3 verification in S10* segment revealed `_W_CONSEC=15` may underweight
-CS2c/d (consecutive working days, official weight 30 per Ceschia 2019, Section 2.5)  
-**Standard:** Ceschia et al. 2019 official INRC-II specification, Section 2.5 (soft constraints).
-Weights sourced from `romer2019_dag_milp.md` lines 164–181, which cites "Ceschia et al. 2019,
-Section 2.5". PDF page number unverified (no poppler-utils in CI); all spec claims cite
-this intermediate reference. Full verification against the Ceschia 2019 PDF
-(`references/Ceschia(2019)_INRC-II_official_spec_hard_soft_constraints_definition.pdf`)
-is a prerequisite before acting on any ❌ verdict.
+CS2c/d (consecutive working days, official weight 30 per Ceschia 2019, Section 2.5)
+
+---
+
+## Spec source verification (W-1, 2026-06-17)
+
+**Weight authority: Ceschia et al. 2019, Section 2.5.1 (Sec 2.5.2 for S6/S7),
+verified 2026-06-17 against PDF pages 6–7 (journal pp. 176–177) using pdfplumber.
+Earlier intermediate citation via `romer2019_dag_milp.md` superseded by direct PDF
+quotes below. All weights in that intermediate reference were correct.**
+
+### Direct PDF verbatim excerpts (Ceschia 2019, Section 2.5.1, p. 176)
+
+> **S1. Insufficient staffing for optimal coverage (30):** The number of nurses for
+> each shift for each skill must be equal to the optimal requirement. Each missing
+> nurse is penalised according to the weight provided.
+
+> **S2. Consecutive assignments (15/30):** A minimum and maximum number of
+> consecutive assignments to the same shift type should be respected. Each extra or
+> missing day is multiplied by the corresponding weight. **The weight for consecutive
+> shift of the same type is 15.**
+> Similarly, a minimum and maximum number of consecutive assignments to any working
+> shift should be respected. **For consecutive working days of any shift the weight
+> is 30.** In both cases, the evaluation involves also the border data.
+
+> **S3. Consecutive days off (30):** Minimum and maximum number of consecutive days
+> off should be respected. Their evaluation involves also the border data. Each extra
+> or missing day is multiplied by the corresponding weight.
+
+> **S4. Preferences (10):** Each assignment to an undesired shift is penalised by the
+> corresponding weight.
+
+> **S5. Complete weekend (30):** Every nurse that has the complete weekend value set
+> to true, must work both weekend days or neither. If she/he works only one of the two
+> days Sat and Sun, this is penalised by the corresponding weight.
+
+### Section 2.5.2 (p. 177) — constraints spanning the planning horizon
+
+> **S6. Total assignments (20):** For each nurse the total number of assignments
+> (working days) must be within the limits (minimum and maximum) enforced by her/his
+> contract. The difference (in either direction), multiplied by the constraint's
+> weight, is added to the objective function.
+
+> **S7. Total working weekends (30):** For each nurse the number of working weekends
+> must be less than or equal to the maximum. The number of worked weekends in excess
+> is added to the objective function multiplied by the weight. **A weekend is
+> considered "working" if at least one of the two days (Sat and Sun) is busy for
+> the nurse.**
+
+> [p. 177, same section] "Obviously, the solver should take constraints S6 and S7
+> into account in each single stage. However, their violation values have a decreasing
+> degree of uncertainty going from one week to the following one, and only in the last
+> week can they be evaluated exactly."
+
+### Confirmed spec for the four "missing" components
+
+**S2 CS2a/b (same-shift-type, weight 15):**
+- Constraint object: shift type's `min_consecutive` / `max_consecutive` fields in
+  the scenario file (Ceschia 2019, p. 174, Sect. 2.1: *"For each shift type… the
+  minimum and maximum number of consecutive assignments of that specific type"*).
+- Border data required: *"number of consecutive worked shifts of the same type"*
+  (p. 175, Sect. 2.3, border data).
+- Our `_end_of_week_history` sets `num_consecutive_shift_assignments: 0` always —
+  the same-shift border data is missing from the carry-forward, independent of the
+  weight issue.
+
+**S5 (complete weekend, weight 30):**
+- Contract flag: `completeWeekends = true/false` (Boolean, p. 173, Sect. 2.1).
+- Violation condition: exactly one of {Sat, Sun} is a working day.
+- Penalty: 1 violation per nurse per week = weight 30 per incomplete weekend occurrence.
+- n012w8 has `completeWeekends=1` for both FullTime and PartTime contracts.
+
+**S7 (total working weekends, weight 30):**
+- Constraint: max-only (`maximumNumberOfWorkingWeekends`, no minimum).
+- "Working" weekend definition: at least one of Sat/Sun worked (p. 177).
+- Evaluated globally at end of horizon; charged incrementally per week by convention.
+- Our MILP uses the at-least-one-of-{Sat,Sun} definition correctly (`wk >= w[SAT]`,
+  `wk >= w[SUN]`, `milp_model.py:299-300`). SA/evaluator do not implement S7.
+
+**S6 (total assignments, weight 20):**
+- Constraint: both min and max (p. 177: *"within the limits (minimum and maximum)"*).
+- Evaluated at end of horizon; solver responsible for modeling per-week prorating.
+- Official weight 20; our MILP uses W_ASSIGN=15 (25% low), SA uses TOTAL_ASSIGN_W=10
+  (50% low). Both are wrong.
+
+### Verdict on intermediate reference
+
+All seven weights in `romer2019_dag_milp.md` lines 164–181 match the PDF exactly.
+No weight differs from what that reference reported. The "via romer2019" citation in
+the initial audit is superseded by the direct PDF citations above but was not wrong.
 
 ---
 
