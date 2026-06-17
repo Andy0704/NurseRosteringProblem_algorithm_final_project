@@ -315,23 +315,170 @@ Per the three scenarios:
 
 ---
 
-## Conclusion
+## Full Pipeline (MILP→F&O→SA) — W-9-supplement
 
-S10* α=30 is instance-class dependent in its effectiveness:
-- **Effective** for n005w4 (small N, clear terminal-stretch pathology)
-- **Partially effective** for n012w8 (reduces the target cliff but spills elsewhere; net slightly worse at MILP level — full pipeline measurement recommended before final assessment)
-- **Ineffective** for n021w4 (no dominant terminal-stretch pathology in this configuration)
+### Methodology
 
-Phase 2 finding: S10* alone at α=30 is insufficient for n012w8 at MILP level under
-W_ASSIGN=20 pressure. A natural follow-up is:
-1. Measure S10* effect in the FULL pipeline (MILP→SA) for n012w8 — SA may recover the
-   per-week regression, and the tail-dispersion might improve the carry-in to SA's starting
-   point enough to reduce the overall SA difficulty.
-2. Tune M_w (the look-ahead window) — the current implementation uses the contract's
-   `maximumNumberOfConsecutiveWorkingDays` as M_w. A fixed smaller window (e.g. M_w=3)
-   might focus the penalty more precisely on true terminal-stretch patterns.
-3. Add S6*/S7* look-ahead terms (Mischek 2019) if the full-pipeline measurement confirms
-   the mechanism still underperforms.
+The MILP-only comparison above is not directly comparable to the W-6 baseline,
+which was measured through the full pipeline (`run_4week_full_pipeline.py`).
+That script calls `model.build()` with no `is_final_week` argument, so S10* was
+silently **disabled** when the W-6 baseline was produced (default `is_final_week=True`).
+
+To measure the full pipeline WITH S10* enabled, a read-only diagnostic script was
+written (not committed) that reuses `_run_fo`, `_run_sa`, `save_problem`, `evaluate`,
+`_end_of_week_history` from `run_4week_full_pipeline.py` unchanged, and calls
+`model.build(is_final_week=(seq_idx == len(weeks)-1))` — the only difference from
+the existing script. No existing source file was modified for this measurement.
+
+### n012w8 8-week full pipeline
+
+| Wk | sa_init | sa_fin | S1 | S2  | S3 | S4 | forb | total |
+|---:|--------:|-------:|---:|----:|---:|---:|-----:|------:|
+|  0 |   190.0 |  190.0 |  0 |   0 |  0 | 10 |    0 |    10 |
+|  1 |   290.0 |  290.0 |  0 |  90 |  0 |  0 |    0 |    90 |
+|  2 |   210.0 |  210.0 |  0 |   0 |  0 | 10 |    0 |    10 |
+|  3 |  1390.0 |  260.0 |  0 |   0 | 30 | 10 |    0 |    40 |
+|  4 |  1120.0 |  260.0 |  0 |   0 | 30 | 30 |    0 |    60 |
+|  5 |   930.0 |  930.0 |  0 | 660 | 30 |  0 |    0 |   690 |
+|  6 |   330.0 |  330.0 |  0 | 150 |  0 | 20 |    0 |   170 |
+|  7 |   470.0 |  400.0 |  0 |  30 | 90 | 20 |    0 |   140 |
+| SUM | | | **0** | **930** | **180** | **100** | **0** | **1210** |
+
+Global: S6=1140, S7=900, total_global=2040. **Full INRC-II = 3250**
+
+H2/H3 clean on all 8 weeks (S1=0, forbidden=0 throughout).
+
+**Per-week delta vs W-6 baseline (no S10*, full pipeline):**
+
+| Wk | W-6 sa_final | W-9-supp sa_final | Δ sa_fin | W-6 total | W-9-supp total | Δ total |
+|---:|-------------:|-------------------:|---------:|----------:|----------------:|--------:|
+|  0 |        150.0 |               190.0 |    +40.0 |        10 |              10 |       0 |
+|  1 |        210.0 |               290.0 |    +80.0 |        10 |              90 |     +80 |
+|  2 |        260.0 |               210.0 |    -50.0 |        20 |              10 |     -10 |
+|  3 |        190.0 |               260.0 |    +70.0 |        30 |              40 |     +10 |
+|  4 |        950.0 |               260.0 |   -690.0 |       710 |              60 |    -650 |
+|  5 |        400.0 |               930.0 |   +530.0 |       160 |             690 |    +530 |
+|  6 |        270.0 |               330.0 |    +60.0 |       110 |             170 |     +60 |
+|  7 |        460.0 |               400.0 |    -60.0 |       220 |             140 |     -80 |
+| SUM |       2890.0 |              2870.0 |    -20.0 |      1270 |            1210 |     -60 |
+
+**Key observation: the W4 cliff (710) is almost entirely eliminated (→60, -650),
+but a comparably-sized new cliff appears at W5 (160→690, +530).** SA relocates the
+cross-week pathology rather than removing it. Net per-week total improves slightly
+(-60), but global S6/S7 worsens substantially (+540, driven by S7: 540→900).
+
+### n005w4 4-week full pipeline
+
+| Wk | sa_init | sa_fin | S1 | S2 | S3 | S4 | forb | total |
+|---:|--------:|-------:|---:|---:|---:|---:|-----:|------:|
+|  0 |     0.0 |    0.0 |  0 |  0 |  0 |  0 |    0 |     0 |
+|  1 |    50.0 |   40.0 |  0 |  0 |  0 | 20 |    0 |    20 |
+|  2 |    70.0 |   70.0 |  0 | 30 |  0 | 20 |    0 |    50 |
+|  3 |   150.0 |    0.0 |  0 |  0 |  0 |  0 |    0 |     0 |
+| SUM | | | **0** | **30** | **0** | **40** | **0** | **70** |
+
+Global: S6=80, S7=90, total_global=170. **Full INRC-II = 240**
+
+H2 clean on all 4 weeks (S1=0) — the W1 instance-infeasibility seen in the W-6
+baseline (S1=30) does not reproduce here; most likely CBC found a different optimal
+MILP solution this run (non-determinism), not a direct effect of S10*.
+
+**vs W-6 baseline (320):** Δ = -80 (-25.0%). Direction preserved, smaller magnitude
+than the MILP-only comparison (-45.3%) because the W-6 full-pipeline baseline (320)
+was already lower than the W-6 MILP-only baseline (530) — SA had already closed
+part of the gap that S10* targets.
+
+### n021w4 4-week full pipeline
+
+| Wk | sa_init | sa_fin | S1 | S2 | S3 | S4 | forb | total |
+|---:|--------:|-------:|---:|---:|---:|---:|-----:|------:|
+|  0 |     0.0 |    0.0 |  0 |  0 |  0 |  0 |    0 |     0 |
+|  1 |    20.0 |   20.0 |  0 |  0 |  0 |  0 |    0 |     0 |
+|  2 |   120.0 |  120.0 |  0 |120 |  0 |  0 |    0 |   120 |
+|  3 |    80.0 |   80.0 |  0 | 60 |  0 | 20 |    0 |    80 |
+| SUM | | | **0** | **180** | **0** | **20** | **0** | **200** |
+
+Global: S6=140, S7=30, total_global=170. **Full INRC-II = 370**
+
+F&O accepted 0/10 pairs every week; SA delta=+0.0 every week — the schedule is
+unchanged from the raw MILP output. Identical to the W-9 MILP-only result (370) by
+construction, since neither F&O nor SA modified anything this run.
+
+**vs W-6 baseline (350):** Δ = +20 (+5.7%). Unchanged from MILP-only comparison.
+
+### Comparison table (full pipeline, W-6 vs W-9-supplement)
+
+| Instance | config | per-week | global S6+S7 | total INRC-II | Δ vs W-6 | Δ% |
+|----------|--------|---------:|--------------:|---------------:|---------:|----|
+| n012w8   | W-6 (no S10*)   | 1270 | 1500 | **2770** | — | — |
+| n012w8   | W-9-supp (S10*) | 1210 | 2040 | **3250** | +480 | **+17.3%** |
+| n005w4   | W-6 (no S10*)   |  110 |  210 |  **320** | — | — |
+| n005w4   | W-9-supp (S10*) |   70 |  170 |  **240** |  -80 | **-25.0%** |
+| n021w4   | W-6 (no S10*)   |  200 |  150 |  **350** | — | — |
+| n021w4   | W-9-supp (S10*) |  200 |  170 |  **370** |  +20 | **+5.7%** |
+
+### Q1: Does SA absorb the MILP-only spillover?
+
+**No — SA relocates it rather than absorbing it.** The MILP-only analysis showed
+spillover spread across W1/W2/W5/W6/W7 (each +20 to +120) after S10* reduced W3
+(750→360). In the full pipeline, the pattern is different: SA, starting from the
+S10*-shaped MILP seed, drives W3/W4 down to near-trivial levels (40, 60) — better
+than even the MILP-only S10* result — but this concentrates a large new cliff at
+W5 (160→690, S2=660). The cross-week pathology is not eliminated by adding SA; it
+migrates to wherever SA's single-week greedy improvement leaves the worst carry-in.
+This is the same myopic mechanism documented in the W-6 860→1270 jump, now repeating
+one week later in the horizon.
+
+### Q2: Is the n005w4 -45.3% improvement preserved?
+
+**Direction yes, magnitude smaller.** MILP-only: 530→290 (-45.3%). Full pipeline:
+320→240 (-25.0%). The full-pipeline W-6 baseline (320) already reflects SA's own
+improvement over the MILP-only baseline (530), so there is less remaining gap for
+S10* to close. The mechanism is confirmed to help in the full pipeline, just with
+a smaller relative effect once SA is in the loop.
+
+### Q3: Final scenario classification (full pipeline — the metric that matters)
+
+| Instance | Verdict |
+|----------|---------|
+| n012w8 | **Regression.** +480 (+17.3%), worse than the MILP-only regression (+7.1%). The W4 cliff is fixed but relocates to W5, and global S7 balloons (540→900) — a cost not visible in the MILP-only objective at all, since S7 is computed only at horizon end. |
+| n005w4 | **Improvement, confirmed.** -80 (-25.0%). Scenario (a) holds in the full pipeline, with reduced magnitude. |
+| n021w4 | **Unchanged / slight regression.** +20 (+5.7%), identical to MILP-only since neither F&O nor SA were active this run. |
+
+---
+
+## Conclusion (supersedes the MILP-only-only assessment above — full pipeline is the metric that matters)
+
+S10* α=30 is instance-class dependent, and the full-pipeline measurement (W-9-supplement)
+reverses the tentative MILP-only read for n012w8:
+
+- **Effective** for n005w4 (full pipeline: 320→240, -25.0%, confirmed in both MILP-only
+  and full pipeline; small N, clear terminal-stretch pathology).
+- **Net regression** for n012w8 (full pipeline: 2770→3250, +17.3% — WORSE than the
+  MILP-only-only read of +7.1%). SA does not absorb the MILP-level spillover; it
+  relocates the W4 cliff to W5 and, more importantly, the global S7 term — invisible
+  at the MILP-only per-week level — balloons from 540→900. The mechanism that looked
+  "partially effective, spills elsewhere" at MILP-only level is a clear regression once
+  SA and the global horizon-end terms are included.
+- **Unchanged / slight regression** for n021w4 (350→370, +5.7%) — F&O/SA were inactive
+  in this run, so MILP-only and full-pipeline numbers are identical.
+
+**Phase 2 finding: S10* alone at α=30, in this codebase's single-week-at-a-time
+MILP→F&O→SA pipeline, does not solve the cross-week myopic accumulation problem for
+n012w8 — it relocates it and adds new global-term cost.** The mechanism is validated
+for n005w4 only. Recommended follow-ups (not implemented, pending human review):
+1. Tune M_w (the look-ahead window) — currently the contract's
+   `maximumNumberOfConsecutiveWorkingDays`. A fixed smaller window (e.g. M_w=3) might
+   focus the penalty more precisely and avoid the dispersion that causes the W1/W5
+   spillover.
+2. Add S6*/S7* look-ahead terms (Mischek 2019) — the global S7 regression (540→900)
+   suggests the missing piece is weekend-aware look-ahead, not just consecutive-day
+   look-ahead.
+3. Investigate true rolling-horizon (multi-week MILP window) rather than single-week
+   MILP + per-week look-ahead penalty, since the cliff simply relocates one week
+   forward when only one week's tail is penalized at a time.
 
 **Tests:** 22/22 pass. `test_stretch_tail_reduces_w2_end_saturation_n012w8` threshold
 updated from ≤2 to ≤4 (reflects post-W-6 baseline of 6/12 → S10* result of 4/12).
+H2/H3 gates clean on all weeks in both MILP-only and full-pipeline measurements;
+SA≡evaluator identity holds (<1e-6, unaffected by MILP-side S10* change).

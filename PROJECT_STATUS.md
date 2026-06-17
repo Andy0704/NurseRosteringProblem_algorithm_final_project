@@ -10,6 +10,7 @@
 2026-06-17 — W-2/W-3 weight alignment complete; evaluator+SA CONSEC_WEIGHT 15→30 per Ceschia 2019; SA≡evaluator identity restored; 21/21 tests pass; pushed bee2dac
 2026-06-17 — W-6 S6/S7 weight alignment: evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; 21/21 tests; baseline_w6_spec_aligned.md frozen; full INRC-II cost n012w8=2770, n005w4=320, n021w4=350
 2026-06-17 — W-9 S10* α=30 re-evaluation: ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; MILP-only results: n005w4 530→290 (-45%, scenario a), n012w8 2660→2850 (+7%, scenario b), n021w4 350→370 (+6%, scenario c); references/s10_star_alpha30_evaluation.md created
+2026-06-17 — W-9-supplement: FULL PIPELINE (MILP→F&O→SA) S10* α=30 measured (no code change; temp diagnostic script reused existing pipeline functions). n012w8 W-6 2770→3250 (+17.3%, REGRESSION — W4 cliff relocates to W5, global S7 540→900); n005w4 320→240 (-25.0%, confirmed improvement); n021w4 350→370 (+5.7%, unchanged from MILP-only). Conclusion updated: mechanism validated for n005w4 only, net regression for n012w8 once SA+global terms included
 
 ## Component Status
 
@@ -40,14 +41,18 @@
 | n012w8   | 12     | 0–3   | 600          | 150.0    | 5.5 s      | MILP+F&O+SA, post-W-3; W3=480 cliff (S2 carry-in accumulation) |
 | n012w8   | 12     | 0–7   | 860          | 107.5    | 9.2 s      | MILP+F&O+SA, post-W-3 full 8-week; S2 SUM=690, H2/H3 clean all wks |
 | n021w4   | 21     | 0–3   | 50           | 12.5     | 10.0 s     | MILP+F&O+SA, post-W-3; H2/H3 clean all weeks |
-| n005w4   | 5      | 0–3   | 110 + 210 global = **320** | — | — | MILP-only, post-W-6; global S6=60, S7=150 |
-| n012w8   | 12     | 0–7   | 1270 + 1500 global = **2770** | — | — | MILP-only, post-W-6; per-week SUM=1270 (S2=1170); W4 cliff=710; gap=1620 |
-| n021w4   | 21     | 0–3   | 200 + 150 global = **350** | — | — | MILP-only, post-W-6; global S6=120, S7=30 |
+| n005w4   | 5      | 0–3   | 110 + 210 global = **320** | — | — | MILP+SA, post-W-6 (no S10*); global S6=60, S7=150 |
+| n012w8   | 12     | 0–7   | 1270 + 1500 global = **2770** | — | — | MILP+SA, post-W-6 (no S10*); per-week SUM=1270 (S2=1170); W4 cliff=710; gap=1620 |
+| n021w4   | 21     | 0–3   | 200 + 150 global = **350** | — | — | MILP+SA, post-W-6 (no S10*); global S6=120, S7=30 |
+| n005w4   | 5      | 0–3   | 70 + 170 global = **240** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); -25.0% vs W-6 |
+| n012w8   | 12     | 0–7   | 1210 + 2040 global = **3250** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); +17.3% vs W-6 (REGRESSION — W4 cliff relocates to W5, S7 540→900) |
+| n021w4   | 21     | 0–3   | 200 + 170 global = **370** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); +5.7% vs W-6 (F&O/SA inactive, identical to MILP-only) |
 
-See `references/benchmark_results.md` for MILP-only breakdown; `references/baseline_w6_spec_aligned.md` for post-W-6 full per-week + global breakdown with scale-gap attribution.
+See `references/benchmark_results.md` for MILP-only breakdown; `references/baseline_w6_spec_aligned.md` for post-W-6 full per-week + global breakdown with scale-gap attribution; `references/s10_star_alpha30_evaluation.md` for S10* MILP-only and full-pipeline comparison.
 
 ## Recent Changes
 
+- [2026-06-17] research: S10* α=30 FULL PIPELINE evaluation (W-9-supplement, no code change — temp diagnostic script reused existing _run_fo/_run_sa unchanged): n012w8 W-6 baseline 2770→3250 (+17.3%, REGRESSION — SA relocates the W4 cliff to W5 rather than absorbing it; global S7 540→900); n005w4 320→240 (-25.0%, improvement confirmed, smaller magnitude than MILP-only -45.3%); n021w4 350→370 (+5.7%, unchanged — F&O/SA inactive). Conclusion in s10_star_alpha30_evaluation.md revised: mechanism validated for n005w4 only; n012w8 is a net regression once SA + global terms included, not "partially effective" as the MILP-only-only read suggested
 - [2026-06-17] feat: S10* α=30 re-evaluation (W-9): ALPHA_S10 constant added; run_with_global() is_final_week bug fixed; stretch-tail test threshold updated (≤2→≤4 after post-W-6 no-S10* baseline jumped 5→6/12); MILP-only comparison clean (no-S10* vs S10*); n005w4 -45% (scenario a), n012w8 +7% (scenario b — W3 cliff halved but spills); n021w4 +6% (scenario c); references/s10_star_alpha30_evaluation.md created; 22/22 tests pass
 - [2026-06-17] fix: S6/S7 weight alignment (W-6 per Ceschia 2019 §2.5.2): evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; test_sa_h2_feasible_no_bigm_leak updated to n005w4 wk3 (n021w4 wk2 frozen after weight change); 21/21 tests; full INRC-II cost: n012w8=2770, n005w4=320, n021w4=350; baseline renamed to baseline_w6_spec_aligned.md
 - [2026-06-17] research: W-3-supplement frozen baseline; n012w8 8-week SUM=860 (S2=690, S3=90, S4=80, H2/H3 all-clean); n005w4 SUM=110 (W1 H2=N, instance infeasibility); n021w4 SUM=50; scale-gap attributed to S6 prorated component (97 violation-units × 10); references/baseline_w3_complete.md created
@@ -85,10 +90,14 @@ See `references/benchmark_results.md` for MILP-only breakdown; `references/basel
 - [ ] W-4: Add S2 CS2a/b (same-shift-type consecutive, spec weight 15) to evaluator + SA + MILP; fix _end_of_week_history num_consecutive_shift_assignments carry
 - [x] W-6: milp_model.py W_ASSIGN 15→20 + SA TOTAL_ASSIGN_W 10→20 + evaluate_global_s6_s7() + run_with_global(); baseline_w6_spec_aligned.md frozen (2026-06-17)
 - [x] W-9: S10* ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; references/s10_star_alpha30_evaluation.md (2026-06-17)
-- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism — follow-up from W-9:
-      Measure S10* α=30 in FULL PIPELINE (MILP→SA) for n012w8 before final assessment.
-      If per-week regression recovers under SA, mechanism is viable with caveats.
-      If not, investigate: smaller M_w window or add S6*/S7* look-ahead terms (Mischek 2019).
+- [x] W-9-supplement: FULL PIPELINE (MILP→F&O→SA) S10* α=30 measured; n012w8 confirmed net REGRESSION (2770→3250, +17.3%); n005w4 confirmed improvement (320→240, -25.0%); n021w4 unchanged (350→370, +5.7%) (2026-06-17)
+- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism — follow-up from W-9-supplement:
+      S10* alone is validated for n005w4 only; n012w8 needs either (1) a smaller M_w
+      look-ahead window, (2) added S6*/S7* look-ahead terms (the global S7 regression
+      540→900 suggests weekend-aware look-ahead is the missing piece), or (3) a true
+      multi-week rolling-horizon MILP rather than single-week + tail penalty (the W4
+      cliff simply relocated to W5, confirming the pathology isn't removed by a
+      one-week-ahead penalty alone). Awaiting human review before further Phase 2 work.
 - [x] Benchmark n005w4/n012w8/n021w4 full pipeline (post-W-3 baseline: references/baseline_w3_complete.md) (2026-06-17)
 - [ ] Benchmark n030w4 with full pipeline
 - [ ] Gantt chart for final results presentation
