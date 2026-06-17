@@ -442,3 +442,327 @@ S10* stretch-tail penalty as specified in Section 3 above. Spec confirmed
 with Clarifications 1–3 (2026-06-16): α = 15 (locked, Q3 verified),
 explicit CS2a/b and S3 exclusions (Q4), single-attempt evaluation policy
 (Clarification 3). Proceeding to 段1 implementation.
+
+**Post-implementation note (W-9/W-9-supplement, 2026-06-17):** α was
+re-verified and corrected to **30** (not 15) once the evaluator/SA weight
+audit (W-2/W-3/W-6) established that CS2c/d (our actual violation type,
+per the Q3 trace above) is weighted 30, not 15, in the spec-correct
+system. α=15 above was based on a since-corrected `_W_CONSEC=15`. Full
+pipeline measurement (`references/s10_star_alpha30_evaluation.md`) shows
+S10* α=30 alone is a **net regression for n012w8** (+17.3% total INRC-II)
+and validated only for n005w4 (-25.0%) — see that document for the
+complete result. This motivates Section 5 below.
+
+---
+
+## 5. S6*/S7* Design Spec (W-10 段0, read-only — no code changes)
+
+**Context:** W-9-supplement showed S10* alone relocates n012w8's cross-week
+cliff (W4→W5) rather than removing it, and the global S7 term balloons
+(540→900) — a cost invisible to S10* (which only reasons about
+*consecutive-working-days* stretch tails, not assignment/weekend budgets).
+Mischek & Musliu (2019) report their **best combination is S6\*/S7\* + S8\*
++ S10\*** (p. 139), with S6\*/S7\* individually having "the largest impact"
+of any single extension (p. 138, Fig. 6 commentary). This section answers
+Q1–Q6 to specify S6\*/S7\* before any implementation, per the user's W-10
+段0 instructions. All page citations refer to Mischek & Musliu (2019),
+*Ann. Oper. Res.* 275:123–143 (local PDF: PDF page = paper page − 122).
+
+### Q1 — What does Mischek's S6* actually do?
+
+**Mechanism (verbatim, p. 133):**
+
+> "S6\*. Average assignments: The total number of assignments up to the
+> current week must be within the bounds defined in the contract,
+> multiplied by the fraction of weeks that have already passed. This
+> extension generalizes constraints S6 to earlier weeks."
+
+**Worked example (verbatim, p. 133):**
+
+> "if a nurse has a minimum of 10 assignments and a maximum of 22, then
+> after stage 4 (of 8), they should have between 5 and 11 shifts assigned.
+> Assuming that they already had 7 shifts assigned in stages 1–3, this
+> constraint would require them to have between 0 and 4 assignments in
+> stage 4."
+
+> "If these constraints are satisfied during all weeks, it can be
+> guaranteed that also constraints S6 are satisfied for the whole
+> schedule." (p. 133)
+
+**Formula (eq. 29–30, p. 134):**
+
+```
+S6*  ∀n∈N:  a_n^tot + Σ_{s,k,d∈{1..7}} x^d_{nsk}  ≤  ⌊a_n^+ · w/|W|⌋ + C^{S6*}_n     (29)
+S6*  ∀n∈N:  a_n^tot + Σ_{s,k,d∈{1..7}} x^d_{nsk}  ≥  ⌈a_n^- · w/|W|⌉ − C^{S6*}_n     (30)
+```
+
+Where `a_n^tot` = cumulative assignments from **actual fixed history**
+(weeks before the current one), `Σ x^d_{nsk}` = the current week's
+decision-variable sum (current week only, matching the basic S6 scope in
+eq. 25–26), `a_n^+`/`a_n^-` = contract max/min total assignments, `w` =
+current week index (1-indexed), `|W|` = total weeks in the horizon.
+
+**Penalized variable/expression:** the **running cumulative total**
+(`a_n^tot` + this week's assignments) against a target that is a fixed
+proportion (`w/|W|`) of the **full-horizon** contract bound — i.e. "by
+week `w`, you should be at roughly `w/|W|` of your total budget."
+
+**Relationship to our S6:** our spec-correct S6 (weight 20,
+`evaluate_global_s6_s7()`, W-6) is exactly Mischek's *basic* S6 (eq.
+25–26, p. 131) — a hard horizon-end check against the full `a_n^+`/`a_n^-`
+bound, evaluated only after all weeks are fixed. S6\* **generalizes** this
+basic check to fire incrementally every week, using the actual-so-far
+total + a proportional target — per the paper, satisfying S6\* in every
+week *guarantees* S6 is satisfied for the whole schedule (p. 133, quoted
+above).
+
+**Critical finding — our existing MILP does NOT implement basic S6, let
+alone S6\*:** `milp_model.py:289-298` (internally mislabeled `"S5"`)
+currently does:
+
+```python
+weekly_min = min_assign // 4
+weekly_max = math.ceil(max_assign / 4)
+total_w = pulp.lpSum(w)
+penalty_terms.append((W_ASSIGN, p_u)); penalty_terms.append((W_ASSIGN, p_o))
+model += (total_w >= weekly_min - p_u, ...)
+model += (total_w <= weekly_max + p_o, ...)
+```
+
+This checks **only the current week's own count** (`total_w`) against a
+**static** `÷4` fraction of the full-horizon bound — it never reads
+`hist.get("num_assignments", ...)` (grep-confirmed: `num_assignments` is
+never referenced anywhere in `milp_model.py`), and the `÷4` divisor is
+hardcoded regardless of the instance's actual `|W|` (already flagged as a
+known limitation for 8-week instances — n012w8: `weekly_min=30//4=7` forces
+near-daily work). This is **not** Mischek's basic S6 (eq. 25–26, which
+uses real `a_n^tot` and the true total `a_n^+`/`a_n^-`, no `÷4`), and not
+S6\* either. **Implementing faithful S6\* requires first deciding whether
+to replace this `÷4` approximation** (Rule 11 — two mechanisms targeting
+the same concept with different formulas is drift, not by-design surrogate,
+unless explicitly justified) **— flagged for human decision in Q6, not
+resolved here.**
+
+### Q2 — What does Mischek's S7* actually do?
+
+**Mechanism (verbatim, p. 134–135):**
+
+> "4.3 Average working weekends. The same argument as above also applies
+> to constraints S7, the maximum number of total weekends. Just like
+> assignments in general, also weekends should not be used up in the early
+> stages, but distributed across all weeks to preserve options. Therefore,
+> an analogous constraint S7\* can be defined: S7\*. Average working
+> weekends: In each week, the still available working weekends (not yet
+> used in previous weeks) should be divided equally among all remaining
+> weeks."
+
+**Formula (eq. 33, p. 135):**
+
+```
+S7*  ∀n∈N:  W_n  ≤  ⌊(t_n^+ − t_n^tot) · 1/(|W| − w + 1)⌋ + C^{S7*}_n
+```
+
+> "Note that since there is at most one working weekend per week and
+> nurse, and the maximum number of working weekends is less than the
+> number of weeks, the limit set for each week will either be 0 or 1."
+> (p. 135)
+
+**Penalized variable/expression:** `W_n` (binary "this week is a working
+weekend" indicator, already defined at eq. 23, p. 131) against a
+**remaining-budget-divided-by-remaining-weeks** target: `(t_n^+ −
+t_n^tot)` is the true remaining weekend allowance (using actual cumulative
+history `t_n^tot`), divided by the number of weeks left including the
+current one (`|W| − w + 1`).
+
+**Important asymmetry — S7\* is NOT the direct analogue of S6\*; it
+matches S6\*b instead.** Mischek defines *two* formulas for assignments:
+S6\* (eq. 29–30, proportional-of-total-budget, quoted in Q1) and **S6\*b**
+(eq. 31–32, p. 134, "remaining assignments... divided equally among all
+remaining weeks" — same wording pattern as S7\*). S7\*'s formula (eq. 33)
+follows the **S6\*b style** (remaining-budget ÷ remaining-weeks), not the
+S6\* style (proportional-of-total). There is no separate "S7\*b". This
+must be implemented precisely — using the S6\*-style formula for S7 would
+not match the paper.
+
+**Relationship to our S7:** our spec-correct S7 (weight 30) is Mischek's
+*basic* S7 (eq. 27, p. 131): `ttot_n + W_n ≤ t_n^+ + C^{S7}_n`. **Our
+existing `milp_model.py:300-307` already implements this exactly**:
+`h_wknd = hist.get("num_working_weekends", 0)` (= `t_n^tot`, confirmed via
+grep — this is the only history-cumulative field actually used in
+`milp_model.py`) and `model += (wk + h_wknd - max_wknds <= p_wk, ...)` ⟺
+`h_wknd + wk ≤ max_wknds + p_wk`, identical in structure to eq. 27. **S7\*
+would be a genuinely new, additive constraint** (no Rule 11 conflict,
+unlike S6\* above) — Mischek's own model runs the basic S7 (eq. 27) and
+S7\* (eq. 33) simultaneously when the extended model is active; they are
+not alternatives.
+
+### Q3 — Per-week budget allocation strategy and boundary handling
+
+**Not ambiguous — both formulas are fully specified, and both use the
+real (fixed) cumulative history, never an assumed/synthetic one.** The
+two formula families differ in what the *target* represents, not in what
+data they use:
+
+- **S6\* (proportional-of-total, eq. 29–30):** the target ceiling/floor at
+  week `w` is `⌊a_n^+ · w/|W|⌋` / `⌈a_n^- · w/|W|⌉` — i.e. "what fraction
+  of the *full-horizon* bound should be used by now," computed purely from
+  `w`, `|W|`, and the contract bound (no assumption about prior weeks'
+  actual values baked into the target itself). This target is then
+  compared against the actual cumulative count `a_n^tot + (this week)`,
+  where `a_n^tot` is always the real, already-solved history — never a
+  hypothetical average. Concretely, for the user's example (8-week
+  horizon, `max_total_assign=30`, solving week 3): the target ceiling is
+  `⌊30 · 3/8⌋ = ⌊11.25⌋ = 11`, and this 11 is compared against the nurse's
+  **actual** `a_n^tot` (real count from weeks 1–2, already fixed) plus
+  week 3's assignments — not against an assumed `30/8 = 3.75/week` history.
+  If the nurse actually under-used their budget in weeks 1–2, they have
+  *more* room in week 3 (since the comparison is against the real total,
+  which is lower than expected); if they over-used it, less room (or a
+  forced `C^{S6*}_n > 0` surplus penalty).
+- **S6\*b/S7\* (remaining-budget ÷ remaining-weeks, eq. 31–33):** the
+  target is computed *directly* from the real remaining budget
+  `(a_n^+ − a_n^tot)` or `(t_n^+ − t_n^tot)`, divided by the weeks left
+  `(|W| − w + 1)`. This is even more explicitly history-driven — there is
+  no "proportional of total" assumption at all; the formula only ever
+  asks "how much is left, divided evenly over what's left."
+
+**Both formulas use `a_n^tot`/`t_n^tot` as the real, already-fixed
+cumulative count — confirmed by our own carry-in infrastructure already
+matching this exactly:** `multi_week_runner._end_of_week_history()`
+(lines 71-82) computes `"num_assignments": hist.get("num_assignments", 0)
++ this_week_assigns` and `"num_working_weekends": hist.get(...) +
+worked_weekend` — i.e. genuine cumulative real counts, propagated week to
+week, exactly matching Mischek's `a_n^tot`/`t_n^tot` definition (p. 131,
+eq. 25–27 use the same `_tot` notation for "cumulative through end of
+prior week"). No new history-tracking mechanism is needed; the existing
+`history["num_assignments"]` / `history["num_working_weekends"]` fields
+already are `a_n^tot`/`t_n^tot`.
+
+### Q4 — α weights for S6* and S7*
+
+**Mischek's published values (Table 1, p. 140, IRACE-tuned):**
+
+| Param | Weight |
+|---|---:|
+| `W_{S6*}` | 9.9 |
+| `W_{S7*}` | 9.9 |
+| `W_{S8*}` | 11.9 |
+| `W_{S10*}` | 15 |
+
+**Verbatim (p. 139):** *"To find optimal weights for the extensions
+S6\*/S7\* and S8\* (the weight for S10\* corresponds directly to the
+weight of the shift stretch length constraints), we used IRACE. Both
+`W_{S6*}(= W_{S7*})` and `W_{S8*}` were varied between 0 and 20... The
+best values reported by IRACE are `W_{S6*} = 9.9` and `W_{S8*} = 11.9`."*
+
+**Critical distinction from S10\*'s weight rationale:** S10\*'s `α=15` was
+**deliberately set to equal the official CS2a/b scoring weight** ("as if
+the violation had already occurred," p. 139 — i.e. weight-matching to the
+real cost is the explicit design rationale). **No equivalent rationale
+exists for S6\*/S7\*.** The paper states `W_{S6*}=W_{S7*}` were *tied
+together as a single free hyperparameter* and tuned purely empirically via
+IRACE search (range 0–20) — there is no claim or implication that this
+value should equal (or relate to) the official S6/S7 scoring weights (20
+and 30 in our spec-correct system). The two mechanisms use fundamentally
+different weight-selection philosophies in the source paper.
+
+**Should `α_S6*` match our S6=20 and `α_S7*` match our S7=30?** Per
+Mischek's own approach: **no** — faithful replication means
+`α_S6*=α_S7*=9.9` (or a value re-tuned by us via the same kind of search,
+not derived from the official weight by analogy). The W-9 approach of
+"α should match the cost it's meant to prevent" (used to correct S10* from
+15→30 once our `_W_CONSEC` was corrected) **does not transparently apply
+here**, because Mischek himself never used that rationale for S6\*/S7\* —
+he used trial-and-error tuning instead. This is a genuine open decision
+point for human confirmation before implementation; this segment does not
+decide it (per guardrails — "the decision is whether to follow Mischek
+faithfully first").
+
+### Q5 — Interaction with S10*
+
+**Additive — no special interaction term.** The extended objective (eq.,
+p. 137–138, Sect. 4.6) is:
+
+```
+minimize f' = f + W_{S8*}·ΣC^{S8*}_skd + W_{S6*}·ΣC^{S6*}_n + W_{S7*}·ΣC^{S7*}_n
+                + W_{S9*}·Σ(C^{S9*a}_n+C^{S9*b}_n+C^{S9*c}_n) + W_{S10*}·ΣC^{S10*}_n
+```
+
+Every extension contributes an independent linear term, summed directly
+into `f'`. **For the same nurse, if both `C^{S6*}_n > 0` (or `C^{S7*}_n >
+0`) and `C^{S10*}_n > 0` are simultaneously true, both penalties are added
+without any combination, cap, or cross-term** — the MILP solver simply
+balances all active surplus variables against the same objective.
+
+**Does Mischek note interaction effects?** Only an empirical (not
+mechanistic) one: *"The solution quality can further be improved by
+combining multiple extensions. A combination of S6\* (and S7\*), S8\* and
+S10\* produced the best results, each of the extensions further reducing
+the penalties of the generated solutions"* (p. 139). No quote anywhere
+describes a negative interference or special handling between S6\*/S7\*
+and S10\* specifically — they are reported as purely complementary
+(further reducing penalty when combined), consistent with pure additivity
+in `f'`.
+
+### Q6 — Implementation in our pipeline
+
+**`milp_model.py`:** yes — new objective terms added inside `build()`,
+gated on `not is_final_week`, exactly mirroring the existing S10\*
+pattern (`milp_model.py:235, 249-250`). Confirmed consistent with
+Mischek p. 138: *"all constraints introduced in this section should be
+ignored in the last week, as there is no further week to influence."*
+
+**`multi_week_runner.py`:** **yes, something new is needed beyond what
+S10\* required.** S10\*'s only dependency was the boolean `is_final_week`
+(already plumbed correctly per W-9/W-9-supplement). S6\*/S7\*'s formulas
+(eq. 29–30, 33) require the **numeric current week index `w`** and **total
+horizon length `|W|`** — neither is currently passed into
+`MilpModel.build()`. `run()` and `run_with_global()` both compute
+`is_final_week = (seq_idx == len(weeks) - 1)` but discard `seq_idx` and
+`len(weeks)` otherwise. **A new parameter (e.g. `build(week_index=seq_idx+1,
+num_weeks=len(weeks), is_final_week=...)`) would need to be added to the
+`build()` signature** — this is a code change for the next segment, not
+made here. The cumulative history values themselves (`a_n^tot`/`t_n^tot`)
+require **no new plumbing** — `history["num_assignments"]` and
+`history["num_working_weekends"]` are already correctly maintained by
+`_end_of_week_history()` and already passed through `nurse_info[...]["history"]`
+(confirmed in Q3).
+
+**`heuristic.cpp` / `penalty_evaluator.py`: untouched — confirmed matches
+Mischek's architecture exactly.** Verbatim (p. 138): *"After a solution
+has been fixed, the actual penalty has to be recalculated using the
+objective function of the basic model `f`, to ensure that the penalties
+from the additional constraints of the extended model are not included in
+the final result."* This is precisely our Rule 12 (objective membership):
+`C^{S6*}_n`/`C^{S7*}_n` are MILP-search-only surplus variables, invisible
+to `runEvalOnly()`/`evaluate()`/`fullCost()`, identical in architecture to
+how `ALPHA_S10`/`z_s10` currently live only inside `MilpModel.build()`.
+
+**Open implementation dependency flagged for human decision (not resolved
+in this segment):** S7\* can be added as a clean, additive new constraint
+(our existing S7 already matches Mischek's basic S7 exactly — Q2). S6\*
+**cannot** be added cleanly without first resolving the Q1 finding: our
+existing `"S5"`-labeled assignment-proration mechanism
+(`milp_model.py:289-298`) is a non-faithful, non-cumulative, `÷4`-hardcoded
+approximation that does not match either Mischek's basic S6 or S6\*. Adding
+true S6\* alongside the existing `÷4` mechanism would create two
+differently-formulated penalties for the same underlying concept (S6),
+which Rule 11 classifies as drift unless explicitly justified as an
+intentional dual-surrogate design — a decision for 段1, not assumed here.
+
+---
+
+## 6. Selected Design — S6*/S7* (pending human confirmation)
+
+**Not yet selected.** Per the W-10 段0 task scope, this segment is
+read-only design research; Q1–Q6 above surface the spec and one
+implementation dependency (the existing non-faithful S6 mechanism) that
+must be resolved before code changes. Awaiting human review of:
+1. Whether to follow Mischek's literal `α_{S6*}=α_{S7*}=9.9` (tied,
+   IRACE-tuned) or a different weight-selection approach (Q4).
+2. Whether to first replace the existing `÷4` S6 approximation with
+   Mischek's basic S6 (eq. 25–26) before layering S6\* on top, or some
+   other resolution to the Rule 11 conflict identified in Q1/Q6.
+3. Whether to implement S6\* and S7\* together (as Mischek's paper
+   evaluates them as a tied pair) or S7\* first in isolation (since it has
+   no implementation dependency, unlike S6\*).
