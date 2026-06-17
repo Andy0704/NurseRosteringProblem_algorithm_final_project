@@ -9,6 +9,7 @@
 2026-06-13 — SA big-M coverage penalty fix (no longer frozen); S4 weight 5→10; H2-feasibility gate (19/19 tests)
 2026-06-17 — W-2/W-3 weight alignment complete; evaluator+SA CONSEC_WEIGHT 15→30 per Ceschia 2019; SA≡evaluator identity restored; 21/21 tests pass; pushed bee2dac
 2026-06-17 — W-6 S6/S7 weight alignment: evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; 21/21 tests; baseline_w6_spec_aligned.md frozen; full INRC-II cost n012w8=2770, n005w4=320, n021w4=350
+2026-06-17 — W-9 S10* α=30 re-evaluation: ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; MILP-only results: n005w4 530→290 (-45%, scenario a), n012w8 2660→2850 (+7%, scenario b), n021w4 350→370 (+6%, scenario c); references/s10_star_alpha30_evaluation.md created
 
 ## Component Status
 
@@ -47,6 +48,7 @@ See `references/benchmark_results.md` for MILP-only breakdown; `references/basel
 
 ## Recent Changes
 
+- [2026-06-17] feat: S10* α=30 re-evaluation (W-9): ALPHA_S10 constant added; run_with_global() is_final_week bug fixed; stretch-tail test threshold updated (≤2→≤4 after post-W-6 no-S10* baseline jumped 5→6/12); MILP-only comparison clean (no-S10* vs S10*); n005w4 -45% (scenario a), n012w8 +7% (scenario b — W3 cliff halved but spills); n021w4 +6% (scenario c); references/s10_star_alpha30_evaluation.md created; 22/22 tests pass
 - [2026-06-17] fix: S6/S7 weight alignment (W-6 per Ceschia 2019 §2.5.2): evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; test_sa_h2_feasible_no_bigm_leak updated to n005w4 wk3 (n021w4 wk2 frozen after weight change); 21/21 tests; full INRC-II cost: n012w8=2770, n005w4=320, n021w4=350; baseline renamed to baseline_w6_spec_aligned.md
 - [2026-06-17] research: W-3-supplement frozen baseline; n012w8 8-week SUM=860 (S2=690, S3=90, S4=80, H2/H3 all-clean); n005w4 SUM=110 (W1 H2=N, instance infeasibility); n021w4 SUM=50; scale-gap attributed to S6 prorated component (97 violation-units × 10); references/baseline_w3_complete.md created
 - [2026-06-17] fix: SA CONSEC_WEIGHT 15→30 (W-3, bee2dac); SA≡evaluator identity restored; 21/21 tests pass; n012w8 post-W-3 SUM=600 (pre-W-2 was 410; +190 from weight correction on S2 CS2c/d + S3); pushed to origin/main
@@ -82,8 +84,11 @@ See `references/benchmark_results.md` for MILP-only breakdown; `references/basel
 - [x] W-3-supplement: frozen baseline measured; n012w8 8-wk SUM=860, n005w4 SUM=110, n021w4 SUM=50; baseline_w3_complete.md committed (2026-06-17)
 - [ ] W-4: Add S2 CS2a/b (same-shift-type consecutive, spec weight 15) to evaluator + SA + MILP; fix _end_of_week_history num_consecutive_shift_assignments carry
 - [x] W-6: milp_model.py W_ASSIGN 15→20 + SA TOTAL_ASSIGN_W 10→20 + evaluate_global_s6_s7() + run_with_global(); baseline_w6_spec_aligned.md frozen (2026-06-17)
-- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism in multi_week_runner.py
-      — Mischek & Musliu (2019) 14-day rolling horizon; this is the correct fix for cross-week constraint accumulation (n012w8 W3 penalty 60→300)
+- [x] W-9: S10* ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; references/s10_star_alpha30_evaluation.md (2026-06-17)
+- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism — follow-up from W-9:
+      Measure S10* α=30 in FULL PIPELINE (MILP→SA) for n012w8 before final assessment.
+      If per-week regression recovers under SA, mechanism is viable with caveats.
+      If not, investigate: smaller M_w window or add S6*/S7* look-ahead terms (Mischek 2019).
 - [x] Benchmark n005w4/n012w8/n021w4 full pipeline (post-W-3 baseline: references/baseline_w3_complete.md) (2026-06-17)
 - [ ] Benchmark n030w4 with full pipeline
 - [ ] Gantt chart for final results presentation

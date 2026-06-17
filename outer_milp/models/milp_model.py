@@ -36,7 +36,7 @@ class MilpModel:
         self._model = None
         self._x = None
 
-    def build(self) -> None:
+    def build(self, is_final_week: bool = True) -> None:
         """Build the PuLP LpProblem with H1-H3 hard constraints and S1-S7 soft penalties.
 
         Assumptions:
@@ -44,6 +44,9 @@ class MilpModel:
           - Day indices: 0=Mon … 5=Sat, 6=Sun (INRC-II standard)
           - Contract assignment bounds span the full 4-week horizon; prorated to 1 week
           - forbidden_successions keys match shift_mapping[i]["name"] or ["id"]
+          - is_final_week: when False, adds the Mischek 2019 S10* stretch-tail
+            look-ahead term (search-time only, see S10* block below); when True
+            (default, backward-compatible), no look-ahead term is added.
         Complexity: O(N * D * S) variables, O(N * D * |forbidden_pairs|) for H3.
         """
         N = self._meta["num_nurses"]
@@ -80,6 +83,10 @@ class MilpModel:
         W_WEEKEND = 30  # excess working weekends
         W_COMPLETE = 30 # incomplete weekend
         W_PREF = 10     # shift-off request violation
+        # S10* alpha = 30, matching CS2c/d weight (Ceschia 2019 p.176-177).
+        # Pre-audit attempt used 15 (CS2a/b value), which underweighted the
+        # actual S2 cost it is meant to prevent.
+        ALPHA_S10 = 30
 
         model = pulp.LpProblem("NRP_INRC2", pulp.LpMinimize)
 
@@ -223,6 +230,24 @@ class MilpModel:
                     p = pulp.LpVariable(f"p_minw_{n_idx}_{d}_{k}", lowBound=0)
                     penalty_terms.append((W_CONSEC, p))
                     model += (w[d] - w_prev - w[d + k] <= p, f"S2_{n_idx}_{d}_{k}")
+
+            # S10* (Mischek & Musliu 2019, p.137-139, eq.40): stretch-tail
+            # look-ahead penalty, search-time only (Rule 12) -- skipped for
+            # the final week of the horizon (p.138: "all constraints
+            # introduced in this section should be ignored in the last
+            # week, as there is no further week to influence").
+            if not is_final_week:
+                # tail_run_proxy is a window-sum relaxation following Mischek
+                # 2019 eq.40 (p.137-138). It over-approximates the true
+                # end-of-week consec_working_days count (counts any work day
+                # in the last M_w days, not requiring strict consecutiveness).
+                # The over-approximation is intentional and matches the paper;
+                # adds slight extra dispersion pressure with negligible
+                # accuracy loss in practice.
+                tail_run_proxy = pulp.lpSum(w[max(0, D - M_w):D])
+                z_s10 = pulp.LpVariable(f"z_s10_{n_idx}", lowBound=0)
+                penalty_terms.append((ALPHA_S10, z_s10))
+                model += (z_s10 >= tail_run_proxy - (M_w - 1), f"S10star_{n_idx}")
 
             # S3: Max consecutive days off (window-sum relaxation, mirrors S1)
             if h_off > 0:

@@ -110,8 +110,11 @@ def run(instance_dir: str, weeks: list, history_variant: int,
             for n_idx in range(len(data["nurse_info"])):
                 data["nurse_info"][n_idx]["history"] = carry_nurse_info[n_idx]["history"]
 
+        # S10* look-ahead (Mischek 2019, p.138) is skipped on the final week
+        # of this run -- there is no further week to influence.
+        is_final_week = (seq_idx == len(weeks) - 1)
         model = MilpModel(data)
-        model.build()
+        model.build(is_final_week=is_final_week)
         schedule_matrix, _ = model.solve(time_limit=time_limit)
 
         penalties = evaluate(schedule_matrix, data)
@@ -150,8 +153,9 @@ def run_with_global(instance_dir: str, weeks: list, history_variant: int,
             for n_idx in range(len(data["nurse_info"])):
                 data["nurse_info"][n_idx]["history"] = carry_nurse_info[n_idx]["history"]
 
+        is_final_week = (seq_idx == len(weeks) - 1)
         model = MilpModel(data)
-        model.build()
+        model.build(is_final_week=is_final_week)
         schedule_matrix, _ = model.solve(time_limit=time_limit)
 
         weekly_schedules.append(schedule_matrix)

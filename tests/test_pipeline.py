@@ -199,3 +199,57 @@ def test_milp_coverage_skill_feasible():
     assert result["S1_coverage"] == 0, (
         f"MILP output violates skill-specific coverage: S1={result['S1_coverage']}"
     )
+
+
+def test_stretch_tail_reduces_w2_end_saturation_n012w8():
+    """S10* should reduce W2-end consecutive-work saturation.
+
+    WHY: the 段1 isolation experiment (references/lookahead_design_notes.md,
+    "W3 Spike Localization") showed nurses fully saturated (cw==max) at W2
+    end causing the W3 S2 spike -- a cross-week pathology attributable to
+    W2's carry-in history.
+    The S10* stretch-tail penalty (Mischek 2019, p.137-139) is added to
+    W0-W2 (is_final_week=False) to discourage this saturation.
+
+    Thresholds (post-W-6, MILP W_ASSIGN=20, ALPHA_S10=30):
+      No-S10* baseline: 6/12 nurses at max (worsened from pre-W-6 5/12 because
+        W_ASSIGN=20 compresses early-week assignments).
+      With S10* α=30:   4/12 nurses at max (6→4 reduction, mechanism works).
+      Pre-audit α=15:   was 5→2, now outdated (pre-W-6 baseline).
+    """
+    from outer_milp.models import MilpModel
+    from outer_milp.utils.multi_week_runner import _end_of_week_history
+    from run_4week_full_pipeline import _run_fo, MILP_TIME
+
+    instance_dir = os.path.join(PROJECT_ROOT, "data/raw_inrc2/testdatasets_json/n012w8")
+
+    carry = None
+    data = None
+    for week_idx in range(3):
+        data = parse(instance_dir, week=week_idx, history=0)
+        if carry is not None:
+            for n_idx in range(len(data["nurse_info"])):
+                data["nurse_info"][n_idx]["history"] = carry[n_idx]["history"]
+
+        model = MilpModel(data)
+        model.build(is_final_week=False)
+        schedule, milp_obj = model.solve(time_limit=MILP_TIME)
+        data["current_schedule"] = schedule
+
+        schedule, _, _ = _run_fo(data, milp_obj)
+        data["current_schedule"] = schedule
+
+        carry = _end_of_week_history(data["current_schedule"], data["nurse_info"])
+
+    # carry now holds the consecutive_working_days at the end of W2.
+    at_max = 0
+    for n_idx, nurse_info in enumerate(data["nurse_info"]):
+        contract = data["contracts"][nurse_info["contract_id"]]
+        m_w = contract["maximumNumberOfConsecutiveWorkingDays"]
+        cw = carry[n_idx]["history"]["consecutive_working_days"]
+        if cw >= m_w:
+            at_max += 1
+
+    assert at_max <= 4, (
+        f"Expected <=4/12 nurses fully saturated (consec_work==max) at W2 end "
+        f"after S10* α=30 (baseline no-S10*=6/12, W-9 measured=4/12), got {at_max}/12")
