@@ -14,7 +14,10 @@
 // Section 1: Penalty weights
 // ============================================================
 static const int COVER_WEIGHT     = 30;
-static const int CONSEC_WEIGHT    = 15;
+// S2 CS2c/d (any-shift consecutive working days) and S3 (consecutive days off):
+// Ceschia 2019 sec 2.5.1 weight 30. Matches evaluator _W_CONSEC=30 (W-2, f5737bc).
+// S2 CS2a/b (same-shift-type consecutive, spec weight 15) is unimplemented (W-4 scope).
+static const int CONSEC_WEIGHT    = 30;
 static const int FORBIDDEN_WEIGHT = 25;
 static const int TOTAL_ASSIGN_W   = 10;
 static const int SHIFT_OFF_REQ_W  = 10;
