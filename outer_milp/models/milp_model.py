@@ -36,17 +36,24 @@ class MilpModel:
         self._model = None
         self._x = None
 
-    def build(self, is_final_week: bool = True) -> None:
+    def build(self, is_final_week: bool = True, cur_week: int = 1,
+              num_weeks: int = 1) -> None:
         """Build the PuLP LpProblem with H1-H3 hard constraints and S1-S7 soft penalties.
 
         Assumptions:
           - demand_matrix[d] columns align with work_shifts ordered by shift index
           - Day indices: 0=Mon … 5=Sat, 6=Sun (INRC-II standard)
-          - Contract assignment bounds span the full 4-week horizon; prorated to 1 week
           - forbidden_successions keys match shift_mapping[i]["name"] or ["id"]
           - is_final_week: when False, adds the Mischek 2019 S10* stretch-tail
-            look-ahead term (search-time only, see S10* block below); when True
-            (default, backward-compatible), no look-ahead term is added.
+            look-ahead term (search-time only, see S10* block below) and uses
+            the S6* proportional-budget term (see S6 block) instead of basic
+            S6; when True (default, backward-compatible), no S10* term is
+            added and basic S6 (horizon-end check) is used instead.
+          - cur_week / num_weeks: 1-indexed current week and total horizon
+            length, used only by the S6* proportional target
+            (cur_week/num_weeks of the full contract bound). Defaults to
+            week 1 of 1 (no proration) for single-week/backward-compatible
+            callers.
         Complexity: O(N * D * S) variables, O(N * D * |forbidden_pairs|) for H3.
         """
         N = self._meta["num_nurses"]
@@ -286,16 +293,33 @@ class MilpModel:
                         f"S4_{n_idx}_{d}_{k}",
                     )
 
-            # S5: Total assignment count (prorated weekly from 4-week contract bounds)
-            weekly_min = min_assign // 4
-            weekly_max = math.ceil(max_assign / 4)
+            # S6: Total assignment count (Ceschia 2019 sec 2.5.2, weight 20).
+            # Basic S6 (Mischek 2019 p.131, eq.25-26) is a horizon-end check
+            # on the real cumulative total (history + this week) -- fires
+            # only on the final week. For non-final weeks, S6* (Mischek 2019
+            # p.133-134, eq.29-30) generalizes it to a proportional cumulative
+            # target (cur_week/num_weeks of the full bound), still checked
+            # against the real cumulative total (W-10 alpha decision: alpha
+            # = W_ASSIGN = 20 for both, matching the cost being prevented --
+            # Mischek's IRACE-tuned 9.9 does not transfer to our weights).
+            # Replaces the prior /4-hardcoded approximation (mislabeled "S5"),
+            # which ignored history entirely and over-constrained 8-week
+            # instances (fixed divisor regardless of actual horizon length).
+            a_tot = hist.get("num_assignments", 0)
             total_w = pulp.lpSum(w)
+            cumulative_total = a_tot + total_w
             p_u = pulp.LpVariable(f"p_au_{n_idx}", lowBound=0)
             p_o = pulp.LpVariable(f"p_ao_{n_idx}", lowBound=0)
             penalty_terms.append((W_ASSIGN, p_u))
             penalty_terms.append((W_ASSIGN, p_o))
-            model += (total_w >= weekly_min - p_u, f"S5_min_{n_idx}")
-            model += (total_w <= weekly_max + p_o, f"S5_max_{n_idx}")
+            if is_final_week:
+                model += (cumulative_total >= min_assign - p_u, f"S6_min_{n_idx}")
+                model += (cumulative_total <= max_assign + p_o, f"S6_max_{n_idx}")
+            else:
+                target_lower = math.ceil(min_assign * cur_week / num_weeks)
+                target_upper = math.floor(max_assign * cur_week / num_weeks)
+                model += (cumulative_total >= target_lower - p_u, f"S6star_min_{n_idx}")
+                model += (cumulative_total <= target_upper + p_o, f"S6star_max_{n_idx}")
 
             # S7: Working weekends and complete-weekend preference
             if D > SUN:

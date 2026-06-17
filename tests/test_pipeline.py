@@ -211,11 +211,15 @@ def test_stretch_tail_reduces_w2_end_saturation_n012w8():
     The S10* stretch-tail penalty (Mischek 2019, p.137-139) is added to
     W0-W2 (is_final_week=False) to discourage this saturation.
 
-    Thresholds (post-W-6, MILP W_ASSIGN=20, ALPHA_S10=30):
-      No-S10* baseline: 6/12 nurses at max (worsened from pre-W-6 5/12 because
-        W_ASSIGN=20 compresses early-week assignments).
-      With S10* α=30:   4/12 nurses at max (6→4 reduction, mechanism works).
-      Pre-audit α=15:   was 5→2, now outdated (pre-W-6 baseline).
+    Thresholds (post-W-10 段1A, true cumulative S6/S6* replacing the /4
+    mislabel -- see references/lookahead_design_notes.md):
+      No-S10*, old /4 mislabel:        6/12 nurses at max (W-6/W-9 baseline).
+      S10* α=30, old /4 mislabel:      4/12 nurses at max (W-9).
+      S10* α=30, true S6/S6* (W-10):   0/12 nurses at max -- the F1 fix
+        (real cumulative-history proration instead of a hardcoded /4) removes
+        the saturation almost entirely on its own; S10* and the corrected
+        S6* now point in the same direction instead of counteracting.
+      Pre-audit α=15 (pre-W-6):        was 5→2, now outdated.
     """
     from outer_milp.models import MilpModel
     from outer_milp.utils.multi_week_runner import _end_of_week_history
@@ -232,7 +236,11 @@ def test_stretch_tail_reduces_w2_end_saturation_n012w8():
                 data["nurse_info"][n_idx]["history"] = carry[n_idx]["history"]
 
         model = MilpModel(data)
-        model.build(is_final_week=False)
+        # num_weeks=8 (n012w8's actual horizon) -- without this, S6*'s
+        # default cur_week=1/num_weeks=1 demands the FULL min_assign be hit
+        # by week 0 alone, an unsatisfiable "work every day" pressure that
+        # masks S10*'s stretch-tail effect (W-10 段1A finding).
+        model.build(is_final_week=False, cur_week=week_idx + 1, num_weeks=8)
         schedule, milp_obj = model.solve(time_limit=MILP_TIME)
         data["current_schedule"] = schedule
 
@@ -250,6 +258,6 @@ def test_stretch_tail_reduces_w2_end_saturation_n012w8():
         if cw >= m_w:
             at_max += 1
 
-    assert at_max <= 4, (
-        f"Expected <=4/12 nurses fully saturated (consec_work==max) at W2 end "
-        f"after S10* α=30 (baseline no-S10*=6/12, W-9 measured=4/12), got {at_max}/12")
+    assert at_max <= 1, (
+        f"Expected <=1/12 nurses fully saturated (consec_work==max) at W2 end "
+        f"after S10* α=30 + true S6/S6* (W-10 段1A measured=0/12), got {at_max}/12")

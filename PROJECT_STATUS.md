@@ -11,21 +11,23 @@
 2026-06-17 — W-6 S6/S7 weight alignment: evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; 21/21 tests; baseline_w6_spec_aligned.md frozen; full INRC-II cost n012w8=2770, n005w4=320, n021w4=350
 2026-06-17 — W-9 S10* α=30 re-evaluation: ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; MILP-only results: n005w4 530→290 (-45%, scenario a), n012w8 2660→2850 (+7%, scenario b), n021w4 350→370 (+6%, scenario c); references/s10_star_alpha30_evaluation.md created
 2026-06-17 — W-9-supplement: FULL PIPELINE (MILP→F&O→SA) S10* α=30 measured (no code change; temp diagnostic script reused existing pipeline functions). n012w8 W-6 2770→3250 (+17.3%, REGRESSION — W4 cliff relocates to W5, global S7 540→900); n005w4 320→240 (-25.0%, confirmed improvement); n021w4 350→370 (+5.7%, unchanged from MILP-only). Conclusion updated: mechanism validated for n005w4 only, net regression for n012w8 once SA+global terms included
+2026-06-17 — W-10 段0: S6*/S7* design spec per Mischek 2019 (read-only, local commit 8c38644, not pushed). Found F1 (milp_model.py "S5" mislabel: static ÷4 estimate ignoring cumulative history, matches neither basic S6 nor S6*) and F2 (Mischek's α=9.9 is IRACE-tuned, not weight-matched, unlike S10*'s α=30)
+2026-06-17 — W-10 段1A: fixed F1 (true cumulative S6/S6*, α=20, replaces ÷4); milp_model.py build() gained cur_week/num_weeks params; 22/22 tests (2 threshold recalibrations, root causes confirmed non-architectural). Full pipeline, S10* OFF for isolation: n012w8 2770→960 (-65.3%!! — W4 cliff 710→150, global S6 960→0), n005w4 320→300 (-6.25%), n021w4 350→420 (+20.0%, but global S6/S7 150→0). F1 alone outperforms S10* alone — primary root cause of n012w8 regression was the mislabel, not absence of look-ahead
 
 ## Component Status
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| outer_milp/models/milp_model.py | ✅ Complete | H2 skill-specific soft coverage; build/solve/fix_and_optimize/fix_nurses; W_ASSIGN=20 (S6, Ceschia 2019 §2.5.2, W-6) |
+| outer_milp/models/milp_model.py | ✅ Complete | H2 skill-specific soft coverage; build/solve/fix_and_optimize/fix_nurses; true cumulative S6 (final week)/S6* (non-final, proportional target) replaces ÷4 mislabel (W-10 段1A); build(is_final_week, cur_week, num_weeks) |
 | outer_milp/main.py | ⚠️ Runs | MILP→F&O→C++ loop runs without error; single-week n021w4 output verified (total=0); cross-week full-pipeline output NOT yet verified |
 | outer_milp/utils/inrc2_parser.py | ✅ Complete | Sc/WD/H0 JSON → problem_exchange.json |
 | outer_milp/utils/penalty_evaluator.py | ✅ Complete | S1–S7 + forbidden succession; S2 CS2c/d & S3 weight 30 (W-2); S6 _W_ASSIGN=20, S7 _W_WEEKEND=30; evaluate_global_s6_s7() for end-of-horizon (W-6) |
-| outer_milp/utils/multi_week_runner.py | ✅ Complete | 4-week history propagation; run_with_global() returns per-week + global S6/S7; CLI prints full INRC-II cost (W-6; MILP ONLY — does not invoke F&O or C++ heuristic) |
+| outer_milp/utils/multi_week_runner.py | ✅ Complete | 4-week history propagation; run_with_global() returns per-week + global S6/S7; CLI prints full INRC-II cost (W-6; MILP ONLY — does not invoke F&O or C++ heuristic); build() calls now pass cur_week/num_weeks for true S6* (W-10 段1A) |
 | outer_milp/utils/validate_schema.py | ✅ Complete | exit 0/1 |
 | outer_milp/utils/json_handler.py | ✅ Complete | fail-loud UTF-8 |
 | inner_heuristic/src/heuristic.cpp | ✅ SA homologous + big-M + 3 ops | SA+LA; consec cost identical to evaluator (SD-1/2/3); big-M H2 penalty (p0=0.05, M≈3·T0); S4=10; best_sched H2 gate; 3 operators (TwoWaySwap 70% / RandomDayOff 15% / ShiftTypeChange 15%, Knust 2019); M_COVER bookkeeping baseline correct for H2-infeasible seeds; CONSEC_WEIGHT 15→30 (W-3, bee2dac); TOTAL_ASSIGN_W 10→20 (W-6); 21/21 tests |
 | inner_heuristic/build/nrp_heuristic | ✅ Built | recompiled 2026-06-17 (W-6) |
-| tests/ (all) | ✅ 21/21 PASS | test_h3_gate (1) + test_pipeline (7) + test_sa_carryin (10) + test_sa_identity (3: 800 random + no-bigM-leak + H2 repair from infeasible seed) |
+| tests/ (all) | ✅ 22/22 PASS | test_h3_gate (1, gap threshold 200→300 per W-10 段1A) + test_pipeline (7, stretch-tail threshold ≤4→≤1 per W-10 段1A) + test_sa_carryin (10) + test_sa_identity (3: 800 random + no-bigM-leak + H2 repair from infeasible seed) |
 | docker/Dockerfile | ❌ Not started | Phase 4 |
 
 
@@ -47,11 +49,16 @@
 | n005w4   | 5      | 0–3   | 70 + 170 global = **240** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); -25.0% vs W-6 |
 | n012w8   | 12     | 0–7   | 1210 + 2040 global = **3250** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); +17.3% vs W-6 (REGRESSION — W4 cliff relocates to W5, S7 540→900) |
 | n021w4   | 21     | 0–3   | 200 + 170 global = **370** | — | — | MILP+F&O+SA, W-9-supp (S10* α=30); +5.7% vs W-6 (F&O/SA inactive, identical to MILP-only) |
+| n005w4   | 5      | 0–3   | 60 + 240 global = **300** | — | — | MILP+F&O+SA, W-10 段1A (true S6/S6*, α=20, S10* OFF for isolation); -6.25% vs W-6 |
+| n012w8   | 12     | 0–7   | 660 + 300 global = **960** | — | — | MILP+F&O+SA, W-10 段1A (true S6/S6*, S10* OFF); **-65.3% vs W-6** — W4 cliff 710→150, global S6 960→0; F1 fix alone outperforms S10* alone |
+| n021w4   | 21     | 0–3   | 420 + 0 global = **420** | — | — | MILP+F&O+SA, W-10 段1A (true S6/S6*, S10* OFF); +20.0% vs W-6 (per-week worse, global S6/S7 150→0) |
 
-See `references/benchmark_results.md` for MILP-only breakdown; `references/baseline_w6_spec_aligned.md` for post-W-6 full per-week + global breakdown with scale-gap attribution; `references/s10_star_alpha30_evaluation.md` for S10* MILP-only and full-pipeline comparison.
+See `references/benchmark_results.md` for MILP-only breakdown; `references/baseline_w6_spec_aligned.md` for post-W-6 full per-week + global breakdown with scale-gap attribution; `references/s10_star_alpha30_evaluation.md` for S10* MILP-only and full-pipeline comparison; `references/lookahead_design_notes.md` (§ W-10 段1A) for the S6/S6* mislabel fix and isolated measurement.
 
 ## Recent Changes
 
+- [2026-06-17] fix: replaced S5-mislabel ÷4 estimate with true cumulative S6/S6* per Mischek (W-10 段1A, F1 fix): milp_model.py's assignment-proration term (previously: current week's count vs. hardcoded min_assign//4 / ceil(max_assign/4), ignoring all history) replaced with real cumulative tracking — basic S6 (full bound check) on the final week, S6* (proportional cumulative target, cur_week/num_weeks) otherwise; α=20 locked (not Mischek's IRACE-tuned 9.9, which doesn't transfer — same rationale as S10*'s α=30). build() gained cur_week/num_weeks params; multi_week_runner.py's two build() call sites updated. 22/22 tests (2 threshold recalibrations: stretch-tail ≤4→≤1 after a missing-plumbing test fix dropped W2-end saturation to 0/12; H3-gate gap 200→300, confirmed SA's own untouched prorated-S6 contribution, not a leak). Full pipeline, S10* OFF for isolation (temp script strips S10star_* constraints post-build, no edit to committed S10* code): n012w8 2770→**960** (-65.3%!, W4 cliff 710→150, global S6 960→0), n005w4 320→300 (-6.25%), n021w4 350→420 (+20.0%, but global S6/S7 150→0). F1 alone outperforms S10* alone on n012w8 — the ÷4 mislabel, not the absence of look-ahead, was the primary driver of the original regression. Reframes 段1B (S7*+S10* recombination) as cleanup on a healthier baseline, not the main fix
+- [2026-06-17] research: S6*/S7* design spec per Mischek 2019 (W-10 段0, local commit 8c38644, NOT pushed pending human review): Q1-Q6 answered with PDF citations (pypdf venv extraction, poppler unavailable). Found F1 (the ÷4 mislabel above) and F2 (Mischek's S6*/S7* α=9.9 is IRACE-tuned, not weight-matched to official S6/S7, unlike S10*'s α=30) — both later resolved/decided in 段1A
 - [2026-06-17] research: S10* α=30 FULL PIPELINE evaluation (W-9-supplement, no code change — temp diagnostic script reused existing _run_fo/_run_sa unchanged): n012w8 W-6 baseline 2770→3250 (+17.3%, REGRESSION — SA relocates the W4 cliff to W5 rather than absorbing it; global S7 540→900); n005w4 320→240 (-25.0%, improvement confirmed, smaller magnitude than MILP-only -45.3%); n021w4 350→370 (+5.7%, unchanged — F&O/SA inactive). Conclusion in s10_star_alpha30_evaluation.md revised: mechanism validated for n005w4 only; n012w8 is a net regression once SA + global terms included, not "partially effective" as the MILP-only-only read suggested
 - [2026-06-17] feat: S10* α=30 re-evaluation (W-9): ALPHA_S10 constant added; run_with_global() is_final_week bug fixed; stretch-tail test threshold updated (≤2→≤4 after post-W-6 no-S10* baseline jumped 5→6/12); MILP-only comparison clean (no-S10* vs S10*); n005w4 -45% (scenario a), n012w8 +7% (scenario b — W3 cliff halved but spills); n021w4 +6% (scenario c); references/s10_star_alpha30_evaluation.md created; 22/22 tests pass
 - [2026-06-17] fix: S6/S7 weight alignment (W-6 per Ceschia 2019 §2.5.2): evaluator _W_ASSIGN=20/_W_WEEKEND=30 + evaluate_global_s6_s7(); MILP W_ASSIGN 15→20; SA TOTAL_ASSIGN_W 10→20; test_sa_h2_feasible_no_bigm_leak updated to n005w4 wk3 (n021w4 wk2 frozen after weight change); 21/21 tests; full INRC-II cost: n012w8=2770, n005w4=320, n021w4=350; baseline renamed to baseline_w6_spec_aligned.md
@@ -91,13 +98,15 @@ See `references/benchmark_results.md` for MILP-only breakdown; `references/basel
 - [x] W-6: milp_model.py W_ASSIGN 15→20 + SA TOTAL_ASSIGN_W 10→20 + evaluate_global_s6_s7() + run_with_global(); baseline_w6_spec_aligned.md frozen (2026-06-17)
 - [x] W-9: S10* ALPHA_S10 15→30; run_with_global is_final_week fix; 22/22 tests; references/s10_star_alpha30_evaluation.md (2026-06-17)
 - [x] W-9-supplement: FULL PIPELINE (MILP→F&O→SA) S10* α=30 measured; n012w8 confirmed net REGRESSION (2770→3250, +17.3%); n005w4 confirmed improvement (320→240, -25.0%); n021w4 unchanged (350→370, +5.7%) (2026-06-17)
-- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism — follow-up from W-9-supplement:
-      S10* alone is validated for n005w4 only; n012w8 needs either (1) a smaller M_w
-      look-ahead window, (2) added S6*/S7* look-ahead terms (the global S7 regression
-      540→900 suggests weekend-aware look-ahead is the missing piece), or (3) a true
-      multi-week rolling-horizon MILP rather than single-week + tail penalty (the W4
-      cliff simply relocated to W5, confirming the pathology isn't removed by a
-      one-week-ahead penalty alone). Awaiting human review before further Phase 2 work.
+- [x] W-10 段0: S6*/S7* design spec per Mischek 2019 (Q1-Q6, local commit 8c38644, not pushed); found F1 (÷4 mislabel) + F2 (Mischek's α=9.9 not weight-matched) (2026-06-17)
+- [x] W-10 段1A: fixed F1 — true cumulative S6/S6* (α=20) replaces ÷4 mislabel; 22/22 tests; full pipeline S10*-OFF isolation: n012w8 2770→960 (-65.3%!), n005w4 320→300 (-6.25%), n021w4 350→420 (+20.0%, global S6/S7→0). F1 alone outperforms S10* alone (2026-06-17)
+- [ ] **[Phase 2 — research contribution]** Look-ahead mechanism — follow-up from W-10 段1A:
+      段1B (not yet started): add S7* (clean addition, no implementation blocker per Q2)
+      and re-measure WITH S10* α=30 on top of the now-much-healthier F1-fixed baseline
+      (n012w8 960, not 2770) — S10*'s effect may look very different on a correct S6*
+      foundation than it did in W-9-supplement (measured against the broken ÷4 baseline).
+      Residuals to address: n012w8 W0/W5 moderate bumps (130/280), n021w4's S2 increase
+      (60→420 driven by true proration). Awaiting human review before 段1B.
 - [x] Benchmark n005w4/n012w8/n021w4 full pipeline (post-W-3 baseline: references/baseline_w3_complete.md) (2026-06-17)
 - [ ] Benchmark n030w4 with full pipeline
 - [ ] Gantt chart for final results presentation

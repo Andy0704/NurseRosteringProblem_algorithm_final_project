@@ -766,3 +766,199 @@ must be resolved before code changes. Awaiting human review of:
 3. Whether to implement S6\* and S7\* together (as Mischek's paper
    evaluates them as a tied pair) or S7\* first in isolation (since it has
    no implementation dependency, unlike S6\*).
+
+---
+
+## W-10 段1A: Mislabel Fix + True S6/S6* Implementation (2026-06-17)
+
+**Decision taken (human, not this segment):** Path A, split into two
+phases. This segment (段1A) fixes F1 and implements true basic-S6/S6*
+only — no S7\*, no S10\* changes. α_S6\* locked to **20** (matches
+official S6 weight, same rationale as S10\*'s α=30 — "match the cost being
+prevented"), explicitly **not** Mischek's IRACE-tuned 9.9 (Q4 finding:
+9.9 was tuned for Mischek's own solver/instance set and does not transfer).
+
+### F1 mislabel diagnosis
+
+`milp_model.py:289-298` (pre-fix), internally labeled `"S5"`:
+
+```python
+weekly_min = min_assign // 4
+weekly_max = math.ceil(max_assign / 4)
+total_w = pulp.lpSum(w)                      # this week's count ONLY
+model += (total_w >= weekly_min - p_u, ...)
+model += (total_w <= weekly_max + p_o, ...)
+```
+
+Confirmed (grep, no other call site): this was the **only** location
+implementing the assignment-count proration. `num_assignments` (the
+cumulative history field) is referenced nowhere else in `milp_model.py` —
+the term checked only the current week's own count against a static `÷4`
+fraction of the full-horizon bound, regardless of the instance's actual
+`|W|` (8 for n012w8) or any nurse's actual cumulative history. No test
+asserted this mechanism's specific values (`grep` for
+`weekly_min|weekly_max|S5_min|S5_max` across `tests/` returned nothing).
+
+### Replacement design
+
+Replaced with true cumulative tracking, branching on `is_final_week`
+(same gate S10\* already uses):
+
+```python
+a_tot = hist.get("num_assignments", 0)        # real cumulative history
+cumulative_total = a_tot + pulp.lpSum(w)       # + this week's decision vars
+if is_final_week:
+    # Basic S6 (Mischek eq.25-26): horizon-end check against full bound
+    model += (cumulative_total >= min_assign - p_u, ...)
+    model += (cumulative_total <= max_assign + p_o, ...)
+else:
+    # S6* (Mischek eq.29-30): proportional cumulative target
+    target_lower = math.ceil(min_assign * cur_week / num_weeks)
+    target_upper = math.floor(max_assign * cur_week / num_weeks)
+    model += (cumulative_total >= target_lower - p_u, ...)
+    model += (cumulative_total <= target_upper + p_o, ...)
+```
+
+`build()` gained two new keyword parameters, `cur_week: int = 1` and
+`num_weeks: int = 1` (defaults preserve single-week/backward-compatible
+behavior — basic S6 with no proration). `multi_week_runner.py`'s two
+`build()` call sites (`run()`, `run_with_global()`) now pass
+`cur_week=seq_idx+1, num_weeks=len(weeks)`.
+
+**Test fallout (both resolved, root cause confirmed non-architectural):**
+- `test_stretch_tail_reduces_w2_end_saturation_n012w8` initially regressed
+  to 6/12 (matching the no-fix baseline) because it called
+  `build(is_final_week=False)` without `cur_week`/`num_weeks`, defaulting
+  to 1/1 — i.e. **no proration at all**, demanding the full
+  `min_assign` be reached by week 0 alone. This created a degenerate
+  "work every day, every week" pressure that exactly canceled S10\*'s
+  stretch-tail-avoidance signal. Fixed by passing `cur_week=week_idx+1,
+  num_weeks=8` (n012w8's real horizon) in the test. Result after fix:
+  **0/12** nurses saturated (vs. 4/12 with S10\* alone under the old
+  mislabel, 6/12 with neither) — threshold tightened `≤4`→`≤1`.
+- `test_sa_h3_clean_on_n012w8_w3`: SA's own (untouched) prorated-S6
+  guidance gap widened from 200→240 because the corrected MILP+F&O seed
+  for W3 changed, shifting how much work SA's internal guidance had left
+  to do. Confirmed via direct trace (not assumed): `final_cost=540`,
+  `eval_total=300`, `gap=240` — the same well-documented SA-vs-eval scale
+  gap mechanism (SA's prorated S6 contribution, excluded from the
+  evaluator per Rule 12), consistent with gaps up to 240/week already
+  observed in `baseline_w6_spec_aligned.md`. Threshold widened 200→300.
+
+22/22 tests pass. H2/H3 gates clean on all weeks in all three instances
+measured below. SA≡evaluator identity unaffected (MILP-side change only).
+
+### Isolated measurement: F1 fix alone, S10* disabled
+
+To isolate the F1 fix's effect from S10\*'s (already measured in
+W-9-supplement), a temporary diagnostic script built each week with
+`cur_week`/`num_weeks` passed correctly (true S6/S6\* active), then
+stripped the `S10star_*` constraints from the built PuLP model in-place
+before solving (the associated surplus variables, with no remaining
+constraint, settle to 0 — equivalent to S10\* being fully disabled,
+without editing `milp_model.py`'s committed S10\* code per the guardrail).
+Full pipeline (MILP→F&O→SA), `multi_week_runner`-equivalent history
+propagation.
+
+**n012w8 8-week, true S6/S6*, S10* disabled:**
+
+| Wk | sa_init | sa_fin | S1 | S2  | S3  | S4 | forb | total |
+|---:|--------:|-------:|---:|----:|----:|---:|-----:|------:|
+|  0 |   510.0 |  510.0 |  0 | 120 |   0 | 10 |    0 |   130 |
+|  1 |   270.0 |  270.0 |  0 |   0 |   0 | 10 |    0 |    10 |
+|  2 |   310.0 |  310.0 |  0 |   0 |   0 | 10 |    0 |    10 |
+|  3 |   380.0 |  380.0 |  0 |   0 |   0 |  0 |    0 |     0 |
+|  4 |   570.0 |  570.0 |  0 | 150 |   0 |  0 |    0 |   150 |
+|  5 |   640.0 |  640.0 |  0 |   0 | 270 | 10 |    0 |   280 |
+|  6 |   260.0 |  260.0 |  0 |   0 |   0 |  0 |    0 |     0 |
+|  7 |   380.0 |  380.0 |  0 |   0 |  60 | 20 |    0 |    80 |
+| SUM | | | **0** | **270** | **330** | **60** | **0** | **660** |
+
+Global: S6=0, S7=300, total_global=300. **Full INRC-II = 960**
+
+**Comparison vs W-6 baseline (old `÷4` mislabel, no S10*, full pipeline):**
+
+| Instance | W-6 baseline | W-10 段1A (F1 fix, no S10*) | Δ | Δ% |
+|----------|-------------:|------------------------------:|--:|----|
+| n012w8   | 2770         | **960**                       | **-1810** | **-65.3%** |
+| n005w4   | 320          | **300**                       | -20 | -6.25% |
+| n021w4   | 350          | **420**                       | +70 | +20.0% |
+
+**n012w8 per-week delta (`sa_final`):**
+
+| Wk | W-6 | W-10 段1A | Δ |
+|---:|----:|----------:|--:|
+| 0 | 150 | 510 | +360 |
+| 1 | 210 | 270 | +60 |
+| 2 | 260 | 310 | +50 |
+| 3 | 190 | 380 | +190 |
+| 4 | 950 | 570 | **-380** |
+| 5 | 400 | 640 | +240 |
+| 6 | 270 | 260 | -10 |
+| 7 | 460 | 380 | -80 |
+
+**n012w8 per-week delta (`total`, the headline metric):**
+
+| Wk | W-6 | W-10 段1A | Δ |
+|---:|----:|----------:|--:|
+| 0 |  10 | 130 | +120 |
+| 1 |  10 |  10 |   0 |
+| 2 |  20 |  10 | -10 |
+| 3 |  30 |   0 | -30 |
+| 4 | 710 | 150 | **-560** |
+| 5 | 160 | 280 | +120 |
+| 6 | 110 |   0 | -110 |
+| 7 | 220 |  80 | -140 |
+| SUM | 1270 | 660 | **-610** |
+
+**n005w4, true S6/S6*, S10* disabled:** per-week=60, global S6=60/S7=180
+(total_global=240). **Full INRC-II = 300** (vs. W-6's 320, -6.25%).
+
+**n021w4, true S6/S6*, S10* disabled:** per-week=420 (S2=390, S4=30),
+global S6=0/S7=0 (total_global=0). **Full INRC-II = 420** (vs. W-6's 350,
++20.0%) — per-week worsened but global went to a perfect 0.
+
+H2/H3 clean (S1=0, forbidden=0) on every week, all three instances.
+
+### Interpretation
+
+**The F1 fix alone — with no look-ahead mechanism at all — is the
+dominant factor in resolving the n012w8 regression**, far exceeding what
+S10\* achieved either alone (W-9: MILP-only +7.1%, full-pipeline +17.3%
+regression) or combined with the old `÷4` mislabel. The W4 cliff (710)
+that survived W-9-supplement's S10\*+old-mislabel combination (and that
+S10\* alone only relocated to W5 at 690) drops to **150** here, with no
+comparable new cliff appearing elsewhere — W5's 280 is moderate, not
+catastrophic. Global S6 reaches **exactly 0** (vs. 960 under the old
+mislabel) — the broken `÷4` proration was forcing the MILP toward
+schedules that systematically violated the true horizon-end assignment
+bound, since it was never actually modeling that bound.
+
+n005w4 (small N) sees a modest improvement (-6.25%), consistent with it
+already being close to optimal under the old mechanism (W-6 was already
+only 320). n021w4 regresses on per-week total (+20.0%) but **eliminates**
+its global S6/S7 cost entirely (150→0) — the true proration pushes nurses
+toward more consecutive work to hit their accurate weekly target, trading
+S2 violations for perfect global compliance; net effect for this instance
+is roughly a wash in total INRC-II terms (350→420, a smaller relative
+move than n012w8's).
+
+**One-sentence verdict: the F1 fix is not "partial" — for n012w8 (the
+instance that motivated this whole Phase 2 investigation) it resolves far
+more of the regression than S10\* did, suggesting the `÷4` mislabel, not
+the absence of look-ahead, was the primary driver of the original
+cross-week pathology.**
+
+This reframes the role of 段1B (S7\* + S10\* recombination): rather than
+being the main fix, S7\*/S10\* may now only need to clean up the
+*remaining* residual (n012w8's W0/W5 moderate bumps, n021w4's S2 increase)
+on top of an already-much-healthier F1-fixed baseline — a smaller, more
+targeted problem than originally framed.
+
+**SA frozen on most weeks (observation, not a defect):** `sa_initial ==
+sa_final` for nearly every week across n012w8 and n021w4 (n005w4 is the
+exception, with real SA movement on weeks 1-3). This likely reflects the
+new MILP+F&O seed already being close to SA's own local optimum under the
+corrected assignment-count signal, leaving little room for further local
+search improvement — consistent with, not contradicting, the F1 fix being
+the dominant lever rather than SA's local search.

@@ -100,7 +100,13 @@ def test_sa_h3_clean_on_n012w8_w3():
     assert sa_eval["forbidden_violations"] == 0, (
         f"runEvalOnly reports forbidden_violations="
         f"{sa_eval['forbidden_violations']} on best_sched")
+    # Gap bound widened 200->300 (W-10 段1A): the MILP S6/S6* fix (true
+    # cumulative history replacing a hardcoded /4 estimate) changed the W3
+    # MILP+F&O seed, shifting SA's own (untouched) prorated-S6 guidance
+    # contribution to 240 here -- still the same well-documented SA-vs-eval
+    # scale gap (see baseline_w6_spec_aligned.md, per-week gaps up to 240),
+    # not a big-M leak.
     gap = final_cost - sa_eval["total"]
-    assert 0 <= gap < 200, (
+    assert 0 <= gap < 300, (
         f"final_cost - eval_total={gap} outside expected S5-gap range "
         f"(final_cost={final_cost}, eval_total={sa_eval['total']})")
