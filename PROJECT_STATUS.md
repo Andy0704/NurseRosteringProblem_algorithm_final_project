@@ -7,6 +7,7 @@
 2026-06-04 — SA≡evaluator cost identity COMPLETE (段1–3 all passed, 800 random schedules per-item clean)
 2026-06-10 — Professor feedback addressed; multi-objective literature review complete; look-ahead confirmed as Phase 2
 2026-06-13 — SA big-M coverage penalty fix (no longer frozen); S4 weight 5→10; H2-feasibility gate (19/19 tests)
+2026-06-17 — W-2/W-3 weight alignment complete; evaluator+SA CONSEC_WEIGHT 15→30 per Ceschia 2019; SA≡evaluator identity restored; 21/21 tests pass; pushed bee2dac
 
 ## Component Status
 
@@ -15,13 +16,13 @@
 | outer_milp/models/milp_model.py | ✅ Complete | H2 skill-specific soft coverage; build/solve/fix_and_optimize/fix_nurses |
 | outer_milp/main.py | ⚠️ Runs | MILP→F&O→C++ loop runs without error; single-week n021w4 output verified (total=0); cross-week full-pipeline output NOT yet verified |
 | outer_milp/utils/inrc2_parser.py | ✅ Complete | Sc/WD/H0 JSON → problem_exchange.json |
-| outer_milp/utils/penalty_evaluator.py | ✅ Complete | S1–S7 + forbidden succession |
+| outer_milp/utils/penalty_evaluator.py | ✅ Complete | S1–S7 + forbidden succession; S2 CS2c/d & S3 weight corrected 15→30 (W-2, f5737bc) |
 | outer_milp/utils/multi_week_runner.py | ✅ Complete | 4-week history propagation verified (MYOPIC MILP ONLY — does not invoke F&O or C++ heuristic) |
 | outer_milp/utils/validate_schema.py | ✅ Complete | exit 0/1 |
 | outer_milp/utils/json_handler.py | ✅ Complete | fail-loud UTF-8 |
-| inner_heuristic/src/heuristic.cpp | ✅ SA homologous + big-M + 3 ops | SA+LA; consec cost identical to evaluator (SD-1/2/3); big-M H2 penalty (p0=0.05, M≈3·T0); S4=10; best_sched H2 gate; 3 operators (TwoWaySwap 70% / RandomDayOff 15% / ShiftTypeChange 15%, Knust 2019); M_COVER bookkeeping baseline correct for H2-infeasible seeds; 20/20 tests |
-| inner_heuristic/build/nrp_heuristic | ✅ Built | recompiled 2026-06-14 |
-| tests/ (all) | ✅ 20/20 PASS | test_pipeline (7) + test_sa_carryin (10) + test_sa_identity (3: 800 random + no-bigM-leak + H2 repair from infeasible seed) |
+| inner_heuristic/src/heuristic.cpp | ✅ SA homologous + big-M + 3 ops | SA+LA; consec cost identical to evaluator (SD-1/2/3); big-M H2 penalty (p0=0.05, M≈3·T0); S4=10; best_sched H2 gate; 3 operators (TwoWaySwap 70% / RandomDayOff 15% / ShiftTypeChange 15%, Knust 2019); M_COVER bookkeeping baseline correct for H2-infeasible seeds; CONSEC_WEIGHT 15→30 (W-3, bee2dac); 21/21 tests |
+| inner_heuristic/build/nrp_heuristic | ✅ Built | recompiled 2026-06-17 |
+| tests/ (all) | ✅ 21/21 PASS | test_h3_gate (1) + test_pipeline (7) + test_sa_carryin (10) + test_sa_identity (3: 800 random + no-bigM-leak + H2 repair from infeasible seed) |
 | docker/Dockerfile | ❌ Not started | Phase 4 |
 
 
@@ -33,11 +34,14 @@
 | n012w8   | 12     | 0–3   | 540          | 135.0    | 2.3 s      | Myopic MILP only |
 | n021w4   | 21     | 0–3   | 1680         | 420.0    | 11.9 s     | Myopic MILP only (pre-fix) |
 | n021w4   | 21     | w0 only | 0            | —        | ~60 s      | MILP+F&O+SA, 3 iter (post-fix, SINGLE WEEK) |
+| n012w8   | 12     | 0–3   | 600          | 150.0    | 5.6 s      | MILP+F&O+SA, post-W-3 (weight-correct S2/S3); W3=480 cliff persists |
 
 See `references/benchmark_results.md` for full per-week breakdown.
 
 ## Recent Changes
 
+- [2026-06-17] fix: SA CONSEC_WEIGHT 15→30 (W-3, bee2dac); SA≡evaluator identity restored; 21/21 tests pass; n012w8 post-W-3 SUM=600 (pre-W-2 was 410; +190 from weight correction on S2 CS2c/d + S3); pushed to origin/main
+- [2026-06-17] fix: evaluator _W_CONSEC 15→30 (W-2, f5737bc); S2 CS2c/d & S3 weights aligned to Ceschia 2019 §2.5.1; test_sa_carryin expected values updated (×2); intentionally identity-broken 9 tests documented
 - [2026-06-15] research: normalized-weight SA surrogate investigated (n012w8 magnitude imbalance ≤3×, at threshold; reflects INRC-II intentional weight calibration); declined per Rule 14. No code change.
 - [2026-06-14] fix: M_COVER bookkeeping baseline for H2-infeasible seeds (cur_cost init now includes M_COVER * totalH2Units(seed), so final_cost = best_cost - M_COVER * totalH2Units(best_sched) is always a clean fullCost value); +1 targeted test (test_sa_h2_repair_from_infeasible_seed) → 20/20 pass; n005w4 W1/W3 final_cost = 30/30 (verified via run_4week_full_pipeline.py)
 - [2026-06-14] feat: SA ShiftTypeChange operator (Knust 2019); 70/15/15 split TwoWaySwap/RandomDayOff/ShiftTypeChange; first operator capable of Off→work transitions; improvement on n005w4/n012w8/n021w4 from 0/3.5/18.8% to ~58/44/19% (n012 partially CBC non-determinism)
@@ -64,6 +68,10 @@ See `references/benchmark_results.md` for full per-week breakdown.
 - [x] SA ShiftTypeChange operator (Knust 2019), 70/15/15 split (2026-06-14)
 - [x] M_COVER bookkeeping baseline for H2-infeasible seeds — 20/20 tests (2026-06-14)
 - [investigated, declined 2026-06-15] Normalized weight as SA search surrogate. 段1 measurement on n012w8 (4 weeks) showed component magnitude imbalance ≤3× (S1/S4=3.0, S2/S4=3.0, S3/S4=1.5), at/below the implementation threshold. The ratios reflect INRC-II's calibrated clinical-priority weighting (Rule 13) rather than a search-pathology artifact. Equal-weight surrogate would invert intentional calibration with no evidence of benefit. Closed out per Rule 14 evidence standard.
+- [x] W-2: evaluator _W_CONSEC 15→30 (Ceschia 2019 §2.5.1); test_sa_carryin expected values updated (2026-06-17)
+- [x] W-3: SA CONSEC_WEIGHT 15→30; identity restored 21/21; n012w8 SUM=600 new baseline (2026-06-17)
+- [ ] W-4: Add S2 CS2a/b (same-shift-type consecutive, spec weight 15) to evaluator + SA + MILP; fix _end_of_week_history num_consecutive_shift_assignments carry
+- [ ] W-6: milp_model.py W_ASSIGN 15→20 (S6 weight, Ceschia 2019 §2.5.2)
 - [ ] **[Phase 2 — research contribution]** Look-ahead mechanism in multi_week_runner.py
       — Mischek & Musliu (2019) 14-day rolling horizon; this is the correct fix for cross-week constraint accumulation (n012w8 W3 penalty 60→300)
 - [ ] Benchmark n021w4 + n012w8 full 4-week MILP+F&O+SA (cross-week not yet verified)
