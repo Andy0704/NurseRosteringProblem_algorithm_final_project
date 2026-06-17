@@ -34,12 +34,16 @@
 | n012w8   | 12     | 0–3   | 540          | 135.0    | 2.3 s      | Myopic MILP only |
 | n021w4   | 21     | 0–3   | 1680         | 420.0    | 11.9 s     | Myopic MILP only (pre-fix) |
 | n021w4   | 21     | w0 only | 0            | —        | ~60 s      | MILP+F&O+SA, 3 iter (post-fix, SINGLE WEEK) |
-| n012w8   | 12     | 0–3   | 600          | 150.0    | 5.6 s      | MILP+F&O+SA, post-W-3 (weight-correct S2/S3); W3=480 cliff persists |
+| n005w4   | 5      | 0–3   | 110          | 27.5     | 3.6 s      | MILP+F&O+SA, post-W-3; W1 H2=N (S1=30, instance infeasibility) |
+| n012w8   | 12     | 0–3   | 600          | 150.0    | 5.5 s      | MILP+F&O+SA, post-W-3; W3=480 cliff (S2 carry-in accumulation) |
+| n012w8   | 12     | 0–7   | 860          | 107.5    | 9.2 s      | MILP+F&O+SA, post-W-3 full 8-week; S2 SUM=690, H2/H3 clean all wks |
+| n021w4   | 21     | 0–3   | 50           | 12.5     | 10.0 s     | MILP+F&O+SA, post-W-3; H2/H3 clean all weeks |
 
-See `references/benchmark_results.md` for full per-week breakdown.
+See `references/benchmark_results.md` for MILP-only breakdown; `references/baseline_w3_complete.md` for post-W-3 full per-week breakdown with scale-gap attribution.
 
 ## Recent Changes
 
+- [2026-06-17] research: W-3-supplement frozen baseline; n012w8 8-week SUM=860 (S2=690, S3=90, S4=80, H2/H3 all-clean); n005w4 SUM=110 (W1 H2=N, instance infeasibility); n021w4 SUM=50; scale-gap attributed to S6 prorated component (97 violation-units × 10); references/baseline_w3_complete.md created
 - [2026-06-17] fix: SA CONSEC_WEIGHT 15→30 (W-3, bee2dac); SA≡evaluator identity restored; 21/21 tests pass; n012w8 post-W-3 SUM=600 (pre-W-2 was 410; +190 from weight correction on S2 CS2c/d + S3); pushed to origin/main
 - [2026-06-17] fix: evaluator _W_CONSEC 15→30 (W-2, f5737bc); S2 CS2c/d & S3 weights aligned to Ceschia 2019 §2.5.1; test_sa_carryin expected values updated (×2); intentionally identity-broken 9 tests documented
 - [2026-06-15] research: normalized-weight SA surrogate investigated (n012w8 magnitude imbalance ≤3×, at threshold; reflects INRC-II intentional weight calibration); declined per Rule 14. No code change.
@@ -70,11 +74,12 @@ See `references/benchmark_results.md` for full per-week breakdown.
 - [investigated, declined 2026-06-15] Normalized weight as SA search surrogate. 段1 measurement on n012w8 (4 weeks) showed component magnitude imbalance ≤3× (S1/S4=3.0, S2/S4=3.0, S3/S4=1.5), at/below the implementation threshold. The ratios reflect INRC-II's calibrated clinical-priority weighting (Rule 13) rather than a search-pathology artifact. Equal-weight surrogate would invert intentional calibration with no evidence of benefit. Closed out per Rule 14 evidence standard.
 - [x] W-2: evaluator _W_CONSEC 15→30 (Ceschia 2019 §2.5.1); test_sa_carryin expected values updated (2026-06-17)
 - [x] W-3: SA CONSEC_WEIGHT 15→30; identity restored 21/21; n012w8 SUM=600 new baseline (2026-06-17)
+- [x] W-3-supplement: frozen baseline measured; n012w8 8-wk SUM=860, n005w4 SUM=110, n021w4 SUM=50; baseline_w3_complete.md committed (2026-06-17)
 - [ ] W-4: Add S2 CS2a/b (same-shift-type consecutive, spec weight 15) to evaluator + SA + MILP; fix _end_of_week_history num_consecutive_shift_assignments carry
 - [ ] W-6: milp_model.py W_ASSIGN 15→20 (S6 weight, Ceschia 2019 §2.5.2)
 - [ ] **[Phase 2 — research contribution]** Look-ahead mechanism in multi_week_runner.py
       — Mischek & Musliu (2019) 14-day rolling horizon; this is the correct fix for cross-week constraint accumulation (n012w8 W3 penalty 60→300)
-- [ ] Benchmark n021w4 + n012w8 full 4-week MILP+F&O+SA (cross-week not yet verified)
+- [x] Benchmark n005w4/n012w8/n021w4 full pipeline (post-W-3 baseline: references/baseline_w3_complete.md) (2026-06-17)
 - [ ] Benchmark n030w4 with full pipeline
 - [ ] Gantt chart for final results presentation
 - [ ] Docker packaging (Phase 4)
