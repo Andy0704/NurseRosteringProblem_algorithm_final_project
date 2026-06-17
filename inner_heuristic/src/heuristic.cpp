@@ -19,7 +19,10 @@ static const int COVER_WEIGHT     = 30;
 // S2 CS2a/b (same-shift-type consecutive, spec weight 15) is unimplemented (W-4 scope).
 static const int CONSEC_WEIGHT    = 30;
 static const int FORBIDDEN_WEIGHT = 25;
-static const int TOTAL_ASSIGN_W   = 10;
+// S6 total assignments, prorated weekly (Ceschia 2019 §2.5.2 weight 20).
+// Per-week proration ÷4 is a SA/MILP search heuristic; global S6 is evaluated
+// end-of-horizon by evaluate_global_s6_s7() in penalty_evaluator.py.
+static const int TOTAL_ASSIGN_W   = 20;
 static const int SHIFT_OFF_REQ_W  = 10;
 
 // ============================================================

@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from outer_milp.models.milp_model import MilpModel
 from outer_milp.utils.inrc2_parser import parse
-from outer_milp.utils.penalty_evaluator import evaluate
+from outer_milp.utils.penalty_evaluator import evaluate, evaluate_global_s6_s7
 
 
 def _end_of_week_history(schedule_matrix: list, nurse_info: list) -> list:
@@ -122,6 +122,48 @@ def run(instance_dir: str, weeks: list, history_variant: int,
     return results
 
 
+def run_with_global(instance_dir: str, weeks: list, history_variant: int,
+                    time_limit: int = 30) -> tuple:
+    """Like run(), but also computes end-of-horizon global S6/S7.
+
+    Returns:
+        (results, global_result) where results is the same list as run()
+        and global_result is from evaluate_global_s6_s7().
+    """
+    if not weeks:
+        raise ValueError("run_with_global: 'weeks' list must not be empty")
+
+    results = []
+    weekly_schedules = []
+    nurse_info_w0 = None
+    contracts = None
+    carry_nurse_info = None
+
+    for seq_idx, week_idx in enumerate(weeks):
+        data = parse(instance_dir, week=week_idx, history=history_variant)
+
+        if seq_idx == 0:
+            nurse_info_w0 = data["nurse_info"]
+            contracts = data.get("contracts", {})
+
+        if carry_nurse_info is not None:
+            for n_idx in range(len(data["nurse_info"])):
+                data["nurse_info"][n_idx]["history"] = carry_nurse_info[n_idx]["history"]
+
+        model = MilpModel(data)
+        model.build()
+        schedule_matrix, _ = model.solve(time_limit=time_limit)
+
+        weekly_schedules.append(schedule_matrix)
+        penalties = evaluate(schedule_matrix, data)
+        results.append({"week": week_idx, **penalties})
+
+        carry_nurse_info = _end_of_week_history(schedule_matrix, data["nurse_info"])
+
+    global_result = evaluate_global_s6_s7(weekly_schedules, nurse_info_w0, contracts)
+    return results, global_result
+
+
 def _report(results: list) -> None:
     """Print a per-week penalty breakdown table with accumulated total."""
     col = "{:>6} | {:>8} | {:>9} | {:>8} | {:>8} | {:>7} | {:>7}"
@@ -181,8 +223,13 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
     try:
-        results = run(args.instance, args.weeks, args.history, args.time_limit)
+        results, global_result = run_with_global(
+            args.instance, args.weeks, args.history, args.time_limit)
         _report(results)
+        print(f"\nGlobal (end-of-horizon, Ceschia 2019 §2.5.2):")
+        print(f"  S6_total_assignments : {global_result['S6_total_assignments']}")
+        print(f"  S7_total_weekends    : {global_result['S7_total_weekends']}")
+        print(f"  total_global         : {global_result['total_global']}")
     except (FileNotFoundError, ValueError, KeyError, RuntimeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(1)

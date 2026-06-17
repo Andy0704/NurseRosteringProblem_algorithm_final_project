@@ -161,7 +161,7 @@ def test_sa_h2_feasible_no_bigm_leak():
 
     WHY (Rule 9): the big-M penalty lives only in the SA acceptance path.
     This test proves three invariants:
-      1. SA moved: final_cost < initial_cost (no longer frozen).
+      1. SA moved: final_cost < initial_cost (not frozen).
       2. H2-feasible: runEvalOnly(best_sched).S1_coverage == 0.
       3. No big-M leak, via IDENTITY (not absolute equality):
          |runEvalOnly(best_sched).total - evaluator.evaluate(best_sched)['total']|
@@ -169,21 +169,23 @@ def test_sa_h2_feasible_no_bigm_leak():
          diverge from the evaluator -- same standard as the 800-schedule
          identity test.
 
-    # final_cost includes SA-guidance prorated S6 (weekly assignment bounds);
-    # runEvalOnly and penalty_evaluator measure per-week INRC-II score only.
-    # final_cost intentionally != evaluator_total -- this is by design, not a bug.
-    # The no-big-M-leak proof uses runEvalOnly vs evaluator identity (<1e-6).
+    final_cost includes SA-guidance prorated S6 (weekly assignment bounds);
+    runEvalOnly and penalty_evaluator measure per-week INRC-II score only.
+    final_cost intentionally != evaluator_total -- this is by design, not a bug.
+    The no-big-M-leak proof uses runEvalOnly vs evaluator identity (<1e-6).
 
-    Instance: n021w4 week 2 (MILP-seeded, sa_initial=60 > sa_final=45 --
-    week 1 was found to be trivially MILP-optimal already, sa_initial==
-    sa_final==0, so it cannot demonstrate SA movement).
+    Instance: n005w4 week 3 (MILP-seeded weeks 0-3, sa_initial=330 > sa_final=30).
+    n021w4 week 2 was used before W-6 but became frozen (sa_initial==sa_final)
+    after TOTAL_ASSIGN_W 10→20 changed the MILP seed enough that SA found no
+    improvement. n005w4 week 3 reliably shows large SA movement (330→30).
     """
-    # Chain MILP solves for weeks 0,1,2 to build an H2-feasible week-2 seed
+    INSTANCE_N005W4 = "data/raw_inrc2/testdatasets_json/n005w4"
+    # Chain MILP solves for weeks 0-3 to build an H2-feasible week-3 seed
     # with correctly propagated history.
     carry = None
     data = None
-    for week in range(3):
-        data = parse(INSTANCE, week=week, history=0)
+    for week in range(4):
+        data = parse(INSTANCE_N005W4, week=week, history=0)
         if carry is not None:
             for n_idx in range(len(data["nurse_info"])):
                 data["nurse_info"][n_idx]["history"] = carry[n_idx]["history"]
@@ -192,7 +194,7 @@ def test_sa_h2_feasible_no_bigm_leak():
         sched, _ = model.solve(time_limit=15)
         data["current_schedule"] = sched
         carry = _end_of_week_history(sched, data["nurse_info"])
-    # data is now week 2, MILP-seeded
+    # data is now week 3, MILP-seeded
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
@@ -223,7 +225,6 @@ def test_sa_h2_feasible_no_bigm_leak():
 
     # 3. No big-M leak: runEvalOnly(best_sched).total must match
     # penalty_evaluator.evaluate(best_sched)['total'] exactly (<1e-6).
-    # W-2/W-3: FAILS here (total diverges via S2/S3 weight 15 vs 30) until W-3.
     data_ev = copy.deepcopy(data)
     data_ev["current_schedule"] = best_sched
     ev_out = evaluate(best_sched, data_ev)

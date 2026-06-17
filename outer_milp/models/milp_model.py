@@ -76,7 +76,7 @@ class MilpModel:
         W_COVERAGE = 30 # skill-specific coverage deficit
         W_CONSEC = 15   # consecutive shift/working-day violations
         W_OFF = 30      # consecutive days-off violations
-        W_ASSIGN = 15   # total assignment count deviation
+        W_ASSIGN = 20   # total assignment count deviation (Ceschia 2019 §2.5.2 S6 weight 20)
         W_WEEKEND = 30  # excess working weekends
         W_COMPLETE = 30 # incomplete weekend
         W_PREF = 10     # shift-off request violation

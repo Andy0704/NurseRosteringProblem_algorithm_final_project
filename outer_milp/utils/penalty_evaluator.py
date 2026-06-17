@@ -25,6 +25,11 @@ _W_COVERAGE = 30
 # implemented; when added in W-4 it will need a separate _W_CONSEC_SAME = 15.
 _W_CONSEC = 30
 _W_PREF = 10
+# Ceschia 2019 §2.5.2: S6 total assignments (global, horizon-end) weight 20;
+# S7 total working weekends (global, horizon-end) weight 30.
+# Both are GLOBAL constraints — use evaluate_global_s6_s7(), not evaluate().
+_W_ASSIGN   = 20
+_W_WEEKEND  = 30
 
 
 def _count_backward(row: list, end_day: int, working: bool) -> int:
@@ -215,6 +220,63 @@ def evaluate(schedule_matrix: list, problem_data: dict) -> dict:
         "S3_consecutive_off": s3,
         "S4_preferences": s4,
         "forbidden_succession_violations": fsv,
+    }
+
+
+def evaluate_global_s6_s7(
+    weekly_schedules: list,
+    nurse_info_w0: list,
+    contracts: dict,
+) -> dict:
+    """Compute global S6 and S7 penalties across the full planning horizon.
+
+    S6 (total assignments) and S7 (total working weekends) are horizon-end
+    global constraints per Ceschia 2019 §2.5.2. Must NOT be added to per-week
+    evaluate() total — Rule 12 (separate objective membership).
+
+    Args:
+        weekly_schedules: ordered list of weekly schedule matrices.
+                          Each is [nurse_idx][day_idx] -> shift_index (0=Off).
+        nurse_info_w0:    nurse_info list from week-0 problem data
+                          (contains pre-horizon history: num_assignments,
+                          num_working_weekends).
+        contracts:        {contract_id: contract_params} from problem data.
+
+    Returns:
+        dict with keys: S6_total_assignments, S7_total_weekends, total_global.
+    """
+    s6 = 0
+    s7 = 0
+
+    for nurse in nurse_info_w0:
+        n_idx    = nurse["index"]
+        contract = contracts.get(nurse["contract_id"], {})
+        hist     = nurse["history"]
+
+        total_assign   = hist.get("num_assignments", 0)
+        total_weekends = hist.get("num_working_weekends", 0)
+
+        for sched in weekly_schedules:
+            row = sched[n_idx]
+            total_assign += sum(1 for s in row if s > 0)
+            if row[5] > 0 or row[6] > 0:   # SAT=5, SUN=6
+                total_weekends += 1
+
+        min_a = contract.get("minimumNumberOfAssignments", 0)
+        max_a = contract.get("maximumNumberOfAssignments", 9999)
+        if total_assign < min_a:
+            s6 += (min_a - total_assign) * _W_ASSIGN
+        elif total_assign > max_a:
+            s6 += (total_assign - max_a) * _W_ASSIGN
+
+        max_w = contract.get("maximumNumberOfWorkingWeekends", 9999)
+        if total_weekends > max_w:
+            s7 += (total_weekends - max_w) * _W_WEEKEND
+
+    return {
+        "S6_total_assignments": s6,
+        "S7_total_weekends":    s7,
+        "total_global":         s6 + s7,
     }
 
 
