@@ -199,3 +199,63 @@ project is verified, and (2) the n021w4 "regression" (+20.0%, also
 3-run-confirmed deterministic) is better framed as a correction — the old
 350 was achieved by a model that didn't know it was violating the global
 S6 constraint, while the new 420 is the honest cost of not violating it.
+
+## Correction (2026-06-19) — Original 960/300/420 measurement was isolation-only
+
+The 段1A verification result above was produced by a throwaway script
+that stripped `S10star_*` constraints post-`build()` — an operation with
+no committed entry point. `milp_model.py` architecturally gates S10\* and
+S6\* on the same `is_final_week` flag; they cannot be independently
+toggled via any committed code path (confirmed by inspection: `build()`'s
+S10\* term, lines 246-256, and its S6\*/basic-S6 term, lines 301-322, both
+key off the single `is_final_week` argument — no second flag exists).
+Per CLAUDE.md Rule 14, a result that cannot be reproduced by a command
+in the repo does not meet the evidence standard for a reported headline
+number.
+
+`run_4week_full_pipeline.py` has now been fixed to faithfully mirror
+`multi_week_runner.py`'s call pattern (`cur_week`/`num_weeks`/
+`is_final_week` plumbed every week, no stripping, no toggle) and also
+gained the global S6/S7 add-on it was previously missing entirely (it
+never called `evaluate_global_s6_s7`). Reproducible via:
+
+    python3 run_4week_full_pipeline.py --instance n012w8   # → 1070
+    python3 run_4week_full_pipeline.py --instance n005w4   # → 260
+    python3 run_4week_full_pipeline.py --instance n021w4   # → 400
+
+Production-faithful (F1 fix + S10\*, matching the actual committed
+architecture):
+
+| Instance | Production total | vs. W-6 baseline | Δ% |
+|---|---:|---:|---:|
+| n012w8 | **1070** | 2770 | **-61.4%** |
+| n005w4 | **260** | 320 | **-18.75%** |
+| n021w4 | **400** | 350 | **+14.3%** |
+
+**Component decomposition** (one-time measurement of S10\*'s marginal
+effect, made possible by comparing the now-corrected production run
+against the isolation figures recorded above):
+
+| | n012w8 | n005w4 | n021w4 |
+|---|---:|---:|---:|
+| "F1 alone" (S10\* stripped, throwaway script, not reproducible) | 960 | 300 | 420 |
+| "F1 + S10\*" (production, committed, reproducible) | 1070 | 260 | 400 |
+| S10\* marginal effect | +110 | -40 | -20 |
+
+Reading: S10\* helps both small instances (n005w4 -13.3%, n021w4 -4.8%
+relative to F1-alone) but is regressive on n012w8 (+11.5% relative to
+F1-alone) — single-week look-ahead does not resolve the larger
+12-nurse coupling that the F1 fix (true cumulative S6/S6\*) already
+addresses directly. This was the open 段1B question ("re-measure WITH
+S10\* α=30 on top of the now-much-healthier F1-fixed baseline") — it is
+now answered as a side effect of fixing the plumbing, not a separate
+experiment.
+
+The 段1A claim "F1 alone -65.3%" above stands as a mechanistic isolation
+finding (it correctly shows what F1 does in the absence of S10\*) but was
+never the production cost and should not be cited as the headline
+result. **The honest production headline is F1+S10\* at -61.4% on
+n012w8** (1070, not 960). All H2/H3 gates (S1_coverage=0,
+forbidden_succession_violations=0) were reconfirmed clean on all 16
+weeks across the 3 instances under the corrected script, and the full
+22/22 test suite still passes.

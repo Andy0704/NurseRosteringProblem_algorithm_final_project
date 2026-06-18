@@ -848,7 +848,7 @@ behavior — basic S6 with no proration). `multi_week_runner.py`'s two
 22/22 tests pass. H2/H3 gates clean on all weeks in all three instances
 measured below. SA≡evaluator identity unaffected (MILP-side change only).
 
-### Isolated measurement: F1 fix alone, S10* disabled
+### Isolated measurement: F1 fix alone, S10* disabled (diagnostic only — NOT reproducible via any committed entry point; see "Correction" below)
 
 To isolate the F1 fix's effect from S10\*'s (already measured in
 W-9-supplement), a temporary diagnostic script built each week with
@@ -883,6 +883,34 @@ Global: S6=0, S7=300, total_global=300. **Full INRC-II = 960**
 | n012w8   | 2770         | **960**                       | **-1810** | **-65.3%** |
 | n005w4   | 320          | **300**                       | -20 | -6.25% |
 | n021w4   | 350          | **420**                       | +70 | +20.0% |
+
+### Correction (2026-06-19): 960/300/420 are not the production numbers
+
+The 960/300/420 row above required stripping `S10star_*` constraints
+post-`build()` — an operation with no committed entry point. `milp_model.py`
+gates S6\* and S10\* on the same `is_final_week` flag (no independent
+toggle exists), so `run_4week_full_pipeline.py`, once correctly plumbed
+with `cur_week`/`num_weeks`, always runs S6\*+S10\* together. The
+production-faithful numbers (verified via `run_4week_full_pipeline.py`,
+see `w10_1a_verification.md` § Correction) are:
+
+| Instance | W-6 baseline | F1 alone (isolation, not reproducible) | F1+S10\* (production) | Δ vs W-6 | Δ% vs W-6 |
+|----------|-------------:|------------------------------------:|----------------------:|---------:|----------:|
+| n012w8   | 2770         | 960                                  | **1070**               | **-1700** | **-61.4%** |
+| n005w4   | 320          | 300                                  | **260**                | -60       | -18.75%   |
+| n021w4   | 350          | 420                                  | **400**                | +50       | +14.3%    |
+
+**S10\* marginal effect on the F1-corrected baseline** (F1+S10\* minus F1
+alone): n012w8 +110 (regressive — single-week look-ahead doesn't resolve
+the 12-nurse coupling), n005w4 -40 (-13.3%, helps), n021w4 -20 (-4.8%,
+small help). This is the 段1B measurement — S10\* on top of the
+F1-corrected baseline — and it was answered as a side effect of fixing
+the plumbing, not a separate experiment.
+
+**-61.4% (1070), not -65.3% (960), is the correct headline number for
+n012w8 going forward.** The isolation tables below remain useful as a
+mechanistic decomposition (they show what F1 does in the absence of
+S10\*) but are not a result the pipeline ever actually produces.
 
 **n012w8 per-week delta (`sa_final`):**
 
@@ -962,3 +990,14 @@ new MILP+F&O seed already being close to SA's own local optimum under the
 corrected assignment-count signal, leaving little room for further local
 search improvement — consistent with, not contradicting, the F1 fix being
 the dominant lever rather than SA's local search.
+
+**Corrigendum (2026-06-19):** the verdict above ("far exceeding what
+S10\* achieved") was written against the 960/300/420 isolation figures,
+which turned out not to be reproducible from any committed code path
+(see Correction above). On the production-faithful F1+S10\* numbers
+(1070/260/400), the qualitative conclusion is unchanged — F1 is still
+the dominant lever, and the original `÷4` mislabel was still the primary
+driver of the n012w8 regression — but the precise headline improvement
+is **-61.4%**, not -65.3%, and S10\*'s role in production is no longer
+hypothetical: it is a measured +110 (regressive) on n012w8, -40 and -20
+(small helps) on n005w4/n021w4 respectively, on top of the F1 fix.
