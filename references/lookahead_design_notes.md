@@ -1001,3 +1001,111 @@ driver of the n012w8 regression — but the precise headline improvement
 is **-61.4%**, not -65.3%, and S10\*'s role in production is no longer
 hypothetical: it is a measured +110 (regressive) on n012w8, -40 and -20
 (small helps) on n005w4/n021w4 respectively, on top of the F1 fix.
+
+## W-10 段1B: S7* per-week working weekend look-ahead
+
+### Implementation note — S7 gate alignment (latent dead-code fix)
+
+Before this change, the S7 block (`milp_model.py` S7c) was unconditional:
+it fired identically every week, checking the real cumulative
+`h_wknd + wk - max_wknds <= p_wk` against the *full* contract
+`max_wknds`, regardless of `is_final_week`. Per Ceschia 2019 p.177, S7
+is a global constraint evaluated only at the end of the planning
+horizon — and since a nurse works at most one weekend per single-week
+MILP call, the cumulative total could never reach `max_wknds` early
+enough to trip this check before the final week. So S7c was dead code
+on every non-final week since the initial scaffold commit (confirmed via
+`git log -L 324,336:outer_milp/models/milp_model.py` — unconditional
+since `5b1a11e`). 段1B wraps the unchanged S7c logic in
+`if is_final_week:` and adds S7\* in the `else:` branch, mirroring the
+S6/S6\* and S10\* structure from 段1A — a correctness fix independent of
+whether S7\* itself helps or hurts.
+
+### Spec (Mischek 2019 eq.33, p.134-135)
+
+    W_n <= floor( (t_n^+ - t_n^tot) / (|W| - w + 1) )
+
+`W_n` = current week's working-weekend indicator (existing binary `wk`),
+`t_n^+` = `max_wknds`, `t_n^tot` = real cumulative weekends through week
+`w-1` (existing `h_wknd`), `|W|` = `num_weeks`, `w` = `cur_week`
+(confirmed 1-indexed: `cur_week=seq_idx+1` in both callers). Denominator
+counts weeks remaining *inclusive* of the current week —
+`slots_remaining = num_weeks - cur_week + 1`, collapsing to 1 at the
+final week (matching the real S7c check there). Slack:
+`z_wknd_n >= wk - proportional_bound`, `z_wknd_n >= 0`.
+
+### α decision
+
+`α_S7* = W_WEEKEND = 30`, matching the official S7 weight — same
+weight-alignment logic as `α_S6* = W_ASSIGN = 20` (段1A) and `α_S10* =
+30` (W-9): weighted by the cost it prevents, not Mischek's IRACE-tuned
+9.9 (locked, 段0).
+
+### Production results
+
+| Instance | 段1A (S6\*+S10\*) | 段1B (+S7\*) | Δ | Δ% |
+|---|---:|---:|---:|---:|
+| n012w8 | 1070 | **860** | -210 | **-19.6%** |
+| n005w4 | 260  | **240** | -20  | **-7.7%**  |
+| n021w4 | 400  | **450** | +50  | **+12.5%** |
+
+**n012w8 per-week breakdown, 段1B** (`evaluate()` on SA output, H2/H3
+clean every week — S1_coverage=0, forbidden=0 confirmed all 8 weeks):
+
+| Wk | S1 | S2 (consec. work) | S3 (consec. off) | S4 (pref) | forbidden | total |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0 |  60 | 0 | 10 | 0 |  70 |
+| 1 | 0 |  60 | 0 | 10 | 0 |  70 |
+| 2 | 0 |   0 | 0 | 10 | 0 |  10 |
+| 3 | 0 |   0 | 0 |  0 | 0 |   0 |
+| 4 | 0 | 150 | 0 |  0 | 0 | 150 |
+| 5 | 0 |   0 | 0 | 20 | 0 |  20 |
+| 6 | 0 |   0 | 0 | 20 | 0 |  20 |
+| 7 | 0 | 150 | 0 | 10 | 0 | 160 |
+| **SUM** | 0 | 420 | 0 | 80 | 0 | **500** |
+
+**Global S6/S7 comparison (all instances):**
+
+| Instance | 段1A S6 / S7 | 段1B S6 / S7 |
+|---|---|---|
+| n012w8 | 0 / 450 | 0 / **360** |
+| n005w4 | 80 / 150 | **60** / 150 |
+| n021w4 | 0 / 30  | 0 / **210** |
+
+All H2/H3 gates (`S1_coverage=0`, `forbidden_succession_violations=0`)
+reconfirmed clean across all 16 weeks (8+4+4) under S7\*, via a separate
+gate-check pass over the full pipeline per instance. Full 22/22 pytest
+suite still passes.
+
+### Interpretation
+
+**n012w8 — (a) clear win.** Per-week total drops (620→500, -19.4%) and
+global S7 excess drops in lockstep (450→360, -20%). S7\* spreads
+weekend-work pressure across the 8-week horizon instead of letting it
+concentrate near the end, exactly as intended — n012w8 now benefits from
+every look-ahead term applied across 段1A+段1B.
+
+**n005w4 — (a) clear win (modest, indirect).** Per-week total is flat
+(30→30) and global S7 itself is unchanged (150→150); the entire -20
+improvement comes from global S6 (80→60) — a knock-on effect of S7\*
+reshaping *which* nurse covers *which* weekend, which shifted the
+downstream SA search toward fewer excess total assignments, not a direct
+effect of the S7\* constraint itself.
+
+**n021w4 — (b) target met but spill.** Per-week total improves
+substantially (370→240, -35.1% — S7\*'s local proportional targets are
+satisfied turn-by-turn), but global S7 excess explodes (30→210, +600%),
+driving a net regression (+50, +12.5%). Each week's MILP only sees its
+*own* proportional budget; it has no visibility into which other nurses
+are also near their caps. Pushing weekend-avoidance onto whichever nurse
+has slack *this week* can concentrate the cumulative excess onto a
+smaller subset of nurses by the final week instead of distributing it —
+the local target is met every week, but the cost spills onto nurses with
+no further weeks left to recover.
+
+**Net read across S6\*/S10\*/S7\* (段1A+段1B combined): no instance is
+helped or hurt by every term** — n012w8 gains from S6\*+S7\* but loses to
+S10\*; n021w4 gains from S10\* but loses to S7\*; n005w4 gains modestly
+from all three. Consistent with Mischek's framing of these as heuristic
+search-time aids, not mathematically necessary constraints: they trade
+off per instance, and the full INRC-II total is the only fair arbiter.

@@ -45,10 +45,12 @@ class MilpModel:
           - Day indices: 0=Mon … 5=Sat, 6=Sun (INRC-II standard)
           - forbidden_successions keys match shift_mapping[i]["name"] or ["id"]
           - is_final_week: when False, adds the Mischek 2019 S10* stretch-tail
-            look-ahead term (search-time only, see S10* block below) and uses
+            look-ahead term (search-time only, see S10* block below), uses
             the S6* proportional-budget term (see S6 block) instead of basic
-            S6; when True (default, backward-compatible), no S10* term is
-            added and basic S6 (horizon-end check) is used instead.
+            S6, and uses the S7* proportional-remaining-weekend budget (see
+            S7 block) instead of basic S7; when True (default, backward-
+            compatible), no S10* term is added and basic S6/S7 (horizon-end
+            checks) are used instead.
           - cur_week / num_weeks: 1-indexed current week and total horizon
             length, used only by the S6* proportional target
             (cur_week/num_weeks of the full contract bound). Defaults to
@@ -321,14 +323,40 @@ class MilpModel:
                 model += (cumulative_total >= target_lower - p_u, f"S6star_min_{n_idx}")
                 model += (cumulative_total <= target_upper + p_o, f"S6star_max_{n_idx}")
 
-            # S7: Working weekends and complete-weekend preference
+            # S7: Working weekends and complete-weekend preference.
+            # Final week: real cumulative check against the full contract
+            # max (Ceschia 2019 p.177 -- S7 is evaluated only at the end
+            # of the planning horizon). Non-final weeks: S7* per-week
+            # proportional-remaining budget (Mischek 2019 eq.33, p.134-135)
+            # instead of the unconditional full-max check this block used
+            # to run every week -- a check that was dead code mid-horizon,
+            # since a nurse can work at most one weekend per week and so
+            # never trips the full max_wknds bound before the final week.
             if D > SUN:
                 wk = pulp.LpVariable(f"wk_{n_idx}", cat="Binary")
                 model += (wk >= w[SAT], f"S7a_{n_idx}")
                 model += (wk >= w[SUN], f"S7b_{n_idx}")
-                p_wk = pulp.LpVariable(f"p_wknd_{n_idx}", lowBound=0)
-                penalty_terms.append((W_WEEKEND, p_wk))
-                model += (wk + h_wknd - max_wknds <= p_wk, f"S7c_{n_idx}")
+                if is_final_week:
+                    p_wk = pulp.LpVariable(f"p_wknd_{n_idx}", lowBound=0)
+                    penalty_terms.append((W_WEEKEND, p_wk))
+                    model += (wk + h_wknd - max_wknds <= p_wk, f"S7c_{n_idx}")
+                else:
+                    # Mischek eq.33: W_n <= floor((t+ - t_tot) / (|W|-w+1)).
+                    # Denominator counts weeks remaining INCLUSIVE of the
+                    # current week (cur_week is 1-indexed -- see build()'s
+                    # docstring and S6* above); at the final week this
+                    # collapses to 1, matching the real check used there.
+                    slots_remaining = num_weeks - cur_week + 1
+                    if slots_remaining > 0:
+                        proportional_bound = max(
+                            0, (max_wknds - h_wknd) // slots_remaining
+                        )
+                        z_wknd = pulp.LpVariable(f"z_wknd_{n_idx}", lowBound=0)
+                        penalty_terms.append((W_WEEKEND, z_wknd))
+                        model += (
+                            wk - proportional_bound <= z_wknd,
+                            f"S7star_{n_idx}",
+                        )
                 if complete_wknd:
                     p_cpl = pulp.LpVariable(f"p_cpl_{n_idx}", lowBound=0)
                     penalty_terms.append((W_COMPLETE, p_cpl))
