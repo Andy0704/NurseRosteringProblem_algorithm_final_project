@@ -424,3 +424,39 @@ on which scope option is chosen.
 5. **matplotlib/pandas**: confirmed absent, not installed per guardrail —
    needs your go-ahead to install before the plotting half of
    `run_ablation.py` (or a separate plotting script) can run.
+
+---
+
+## Scope Lock (2026-06-19)
+
+The four open items above are now resolved. Locked decisions, verbatim:
+
+1. **Scope: variant (d+).**
+   - 1 instance per dataset for all 14 public-testbed datasets
+     (the official finalist instance ID per recovery in 段0)
+   - 3 modes per dataset: milp_only / milp_fo / full
+   - Plus: in the 3 testdatasets (n005/n012/n021), run 2-3
+     extra instances (random selection from available combos)
+     in 'full' mode only, to get SA-on-different-seed-via-different-
+     instance stability evidence
+   - Estimated wall-clock: ~13 hours total, fits budget
+
+2. **Runner architecture: B1 (new file `evaluation/run_ablation.py`).**
+   - DO NOT reimplement any helper; import parse, MilpModel,
+     F&O loop, runEvalOnly subprocess wrapper from existing
+     modules.
+   - Mode-gated execution: milp → milp+fo → milp+fo+sa
+   - Per-week JSON output as designed in 段0
+
+3. **SA seed: do NOT modify C++ in this evaluation work.**
+   The heuristic.cpp hardcoded seed stays. Report it as a known
+   limitation in the final write-up. SA-seed stability is
+   approximated indirectly by running the testdataset extras
+   on different starting instances.
+
+4. **matplotlib/pandas: install at start of 段3, not now.**
+   Command for then: `pip install --user matplotlib pandas`.
+
+Next action is EVAL-段1 (implementation segment, writing
+`evaluation/run_ablation.py`) — not started this session. Resuming
+Friday morning.
