@@ -561,3 +561,141 @@ monotonicity check above — which passed.
 3/3 modes produce valid JSON, monotonicity holds, `full` is H2/H3-clean,
 and the `full`-mode total matches the independent reference script
 exactly. No divergence from the locked architecture. Proceeding to commit.
+
+---
+
+## EVAL-段2-pre Findings (2026-06-19)
+
+### `run_ablation.py` change
+
+Added `--time-limit-per-week` (default 30, unchanged from §6's sketch) —
+`MilpModel.solve()` already accepted a `time_limit` parameter, so this
+was a pure plumbing change: thread it through `run_instance()` and the
+CLI. 11-line diff (`git diff --stat`), well under the 30-line guardrail.
+No other file touched.
+
+### Big-instance probe: n120w8 full mode, 8-week recovered instance
+
+**Did not complete in 30 minutes** — `timeout 1800` killed it (exit 124)
+after 6/8 weeks reached their pre-SA save point; no output JSON (the
+record is only written once, at the very end of `run_instance()`).
+Per the segment's literal guardrail this reads as "won't finish in
+budget, need smaller scope" — but three follow-up single/double-week
+probes (still each individually bounded, none re-running the full
+8-week sequence) show that conclusion would be **wrong**, and pin down
+why:
+
+| Probe | week role | history | MILP | F&O | SA | total |
+|---|---|---|---:|---:|---:|---:|
+| isolated 1-week | final (no look-ahead) | fresh H0 | 41.3s | 11.1s | 3.5s | **55.9s** |
+| 2-week, slot 1 | non-final (look-ahead active) | fresh H0 | 310.0s (maxed) | 11.1s | 3.5s | **324.6s** |
+| 2-week, slot 2 | final (no look-ahead) | carried-forward | 310.0s (maxed) | 11.4s | 3.5s | **325.0s** |
+
+Only the very first row — final-week **and** fresh H0 simultaneously —
+converges quickly. Either condition alone (non-final/look-ahead-active,
+*or* carried-forward history) is independently sufficient to push CBC
+to consume its entire 310s allotment at N=120. In the real 8-week
+instance, only week 0 has fresh H0, and only the last week is final —
+so at most one week out of eight can ever land in the "easy" cell;
+every other week is expected to take ~310s of MILP alone. This matches
+the original probe's observed rate directly: 6 weeks reaching the
+pre-SA point inside 1800s ≈ 300s/week, consistent with MILP alone
+consuming ~310s on nearly every week.
+
+**Correction to the guardrail's stated rationale (Rule 10 — verify
+against data):** the probe's own 30-minute cap was *tighter than even
+§4's own formula estimate* for this one dataset/mode — §4's wall-clock
+table already projects **2,480s (41.3 min)** for a single n120w8
+MILP-only run, before F&O/SA are added. Hitting 1800s here was
+therefore guaranteed by §4's own numbers, not a sign of a new problem.
+The right comparison is observed-full-mode-per-week (~324.7s avg across
+the two maxed-out probes above) against §4's bare per-week formula
+(310s): **ratio ≈ 1.05** — F&O adds ~3.6%, SA adds ~1.1%, on top of an
+MILP stage that already fully consumes its budget. This is a *good*
+result: it means §4's formula-only estimate (which assumed MILP alone)
+already approximates the real full-mode cost within 5%, F&O/SA overhead
+included.
+
+### Budget projection
+
+Extrapolating the observed ratio (1.05) onto the Scope Lock's own
+estimate for the full (d+) batch (14 datasets × 1 instance × 3 modes +
+testdataset extras, **§Scope Lock: "~13 hours total, fits budget"**):
+
+```
+13h × 1.05 ≈ 13.65h  (≈ 13h 39min)
+```
+
+Still in the same ballpark as the original estimate, but with less
+slack than "~13h" suggested — worth a margin when picking the launch
+window (an 8pm start leaves ~13h before a typical 9am check-in; a 13.65h
+run would finish closer to 9:40am). Recommend launching as early in the
+evening as practical, or treating "~14h, not ~13h" as the working
+number. No scope reduction is needed — variant (d+) still fits within
+an overnight-plus-margin window.
+
+This also confirms `run_batch.py`'s internal per-job timeout
+(`num_weeks * time_limit_per_week * 2`, e.g. 8×310×2 = 4,960s ≈ 82.7 min
+for n120w8) comfortably covers the realistic ~43.3 min full-mode
+duration with margin for variance, without needing adjustment.
+
+### Batch wrapper
+
+New file `evaluation/run_batch.py` (199 lines). Subprocess-isolates each
+(instance, mode) job against `run_ablation.py`; writes a `status:FAILED`
+placeholder JSON on non-zero exit or per-job timeout, logs a progress
+line per job plus a `START`/`SUMMARY` line, and supports `--resume` by
+skipping any `<label>_<mode>.json` that already parses as valid JSON.
+SIGINT/SIGTERM set a flag checked between jobs — the in-progress
+subprocess is left to finish naturally (it only writes its output once,
+at the end, so there is no partial-write risk either way), and no
+further jobs are dispatched after that.
+
+### Instances file
+
+New file `evaluation/finalist_instances.txt` (26 data lines): the 14
+production datasets' Instance "A" from §2's recovery table, the 3
+testdatasets' canonical (history=0, full-horizon) instance, and 9
+testdataset SA-stability extras (3 per testdataset, `full`-mode-only via
+the optional 4th field) — fixed deterministic combos, not true RNG, for
+reproducibility, each distinct from its dataset's canonical instance.
+
+### Smoke batch results — 3 testdatasets × 3 modes
+
+9/9 jobs completed (no failures, no timeouts); `batch.log` has 9
+progress lines + `START` + `SUMMARY` = 11 lines; `n005w4_0_0-1-2-3_full`
+total_inrc2_cost = **240**, exact match against EVAL-段1's smoke result;
+re-running the same command with `--resume` correctly logged `SKIP` for
+all 9 and wrote no new files.
+
+### Recommended overnight launch (NOT executed this segment)
+
+```
+nohup python3 evaluation/run_batch.py \
+    --instances-file evaluation/finalist_instances.txt \
+    --modes milp,fo,full \
+    --output-dir results/batch_2026-06-20/ \
+    --log-file results/batch_2026-06-20/batch.log \
+    --time-limit-per-week 310 \
+    > results/batch_2026-06-20/nohup.out 2>&1 &
+```
+
+Resume command (if interrupted): same command plus `--resume`.
+
+Expected completion: **~13.5–14 hours from launch** (see budget
+projection above) — longer than the originally stated "~13h", still
+fits an overnight-plus-margin window.
+
+### Known limitations
+
+- The 9 testdataset SA-stability extras use a fixed deterministic
+  selection of (history, weeks) combos, not true random sampling, per
+  the design note in `finalist_instances.txt` — adequate for "different
+  starting instance" evidence, not a statistical sample.
+- `run_batch.py`'s per-job timeout multiplier (×2) was validated against
+  n120w8 only (the largest dataset); smaller datasets were not probed
+  individually in this segment — the real batch run is the first test
+  of whether MILP reliably maxes out its budget at smaller N too, or
+  converges early (both are fine for `run_batch.py`'s correctness, only
+  the wall-clock projection's accuracy depends on it).
+- SA seed remains hardcoded (Decision 3, unchanged).

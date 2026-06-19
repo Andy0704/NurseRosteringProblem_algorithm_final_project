@@ -50,7 +50,8 @@ def _git_sha() -> str:
     ).stdout.strip()
 
 
-def run_instance(dataset: str, weeks: list, history: int, mode: str) -> tuple:
+def run_instance(dataset: str, weeks: list, history: int, mode: str,
+                  time_limit_per_week: int = MILP_TIME) -> tuple:
     """Run one instance through the mode-gated pipeline, week by week.
 
     Returns (per_week: list[dict], global_result: dict).
@@ -77,7 +78,7 @@ def run_instance(dataset: str, weeks: list, history: int, mode: str) -> tuple:
                     num_weeks=len(weeks))
 
         t0 = time.time()
-        schedule, milp_obj = model.solve(time_limit=MILP_TIME)
+        schedule, milp_obj = model.solve(time_limit=time_limit_per_week)
         wall_milp = time.time() - t0
         data["current_schedule"] = schedule
 
@@ -172,6 +173,9 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--mode", required=True, choices=["milp", "fo", "full"])
     p.add_argument("--output", required=True,
                    help="Path to output JSON file (list-of-records; appended to)")
+    p.add_argument("--time-limit-per-week", type=int, default=MILP_TIME,
+                   help=f"CBC time limit per week in seconds (default: {MILP_TIME}); "
+                        "Ceschia 2019 spec is 10 + 3*(N-20)")
     return p.parse_args()
 
 
@@ -179,7 +183,8 @@ def main() -> None:
     args = _parse_args()
     t0 = time.time()
     per_week, global_result = run_instance(
-        args.dataset, args.weeks, args.history, args.mode)
+        args.dataset, args.weeks, args.history, args.mode,
+        args.time_limit_per_week)
     wall_clock_total = time.time() - t0
     record = build_record(args.dataset, args.history, args.weeks, args.mode,
                            per_week, global_result, wall_clock_total)
