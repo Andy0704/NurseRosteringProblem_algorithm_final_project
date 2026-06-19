@@ -460,3 +460,104 @@ The four open items above are now resolved. Locked decisions, verbatim:
 Next action is EVAL-段1 (implementation segment, writing
 `evaluation/run_ablation.py`) — not started this session. Resuming
 Friday morning.
+
+---
+
+## EVAL-段1 Implementation Notes (2026-06-19)
+
+### File layout
+
+- **New file**: `evaluation/run_ablation.py` (~205 lines). Single-file,
+  no new modules, per the locked B1 architecture.
+- **No existing files modified.** §6's correction turned out to apply
+  literally: F&O is not inlined inside `run_with_global()` — it's
+  already a standalone module-level function, `_run_fo()`, in
+  `run_4week_full_pipeline.py` (alongside `_run_sa()` for the C++ SA
+  subprocess call). Both are imported directly into `run_ablation.py`
+  with zero modification to that file or to `multi_week_runner.py`.
+  `multi_week_runner.py` contributes only `_end_of_week_history()`
+  (also imported, unmodified).
+- `.gitignore`: added `data/exchange/ablation_bench.json` (dedicated
+  exchange file, separate from `run_4week_full_pipeline.py`'s
+  `pipeline_bench.json`, so the two runners never collide) and
+  `results/*.json` / `!results/.gitkeep`.
+- `results/.gitkeep`: added so the (gitignored) `results/` directory
+  exists in the repo.
+
+### F&O extraction outcome
+
+**Not needed.** Step 3's grep (`fix_and_optimize|def run_fo|F&O|fix_optimize`
+over `outer_milp/` and `run_4week_full_pipeline.py`) found `_run_fo` and
+`_run_sa` already standalone at `run_4week_full_pipeline.py:50` and `:69`,
+each a top-level function operating on a `data` dict — no closure over
+`run_with_global`'s locals, no class coupling. Imported as-is:
+`from run_4week_full_pipeline import _run_fo, _run_sa`. The 0-line diff
+on existing files is well under the 30-line guardrail.
+
+### Mode-gated loop design
+
+`run_ablation.run_instance()` mirrors `multi_week_runner.run_with_global()`'s
+per-week loop (parse → carry history → build → solve → evaluate → carry
+forward) with one addition: after `model.solve()`, it conditionally runs
+`_run_fo()` (modes `fo`/`full`) and then `_run_sa()` (mode `full` only),
+re-evaluating `penalty_evaluator.evaluate()` on whichever schedule is
+final for that mode before carrying history to the next week. Per-phase
+wall-clock (`wall_clock_milp` / `wall_clock_fo` / `wall_clock_sa`) is
+measured by wrapping each conditional block in its own `time.time()` pair;
+phases that don't run for a given mode report `0.0`, not `null`.
+
+### Smoke test results — n005w4_0_0-1-2-3
+
+| mode | total_inrc2_cost | h2_clean | h3_clean | wall-clock |
+|---|---:|---|---|---:|
+| milp | 550 | False | True | 0.9s |
+| fo   | 460 | False | True | 1.0s |
+| full | 240 | **True** | True | 6.1s |
+
+Monotonic improvement holds: 550 ≥ 460 ≥ 240 (each layer only improves,
+never regresses) — matches the expected mode-gated superset relationship.
+`h2_clean`/`h3_clean` pattern matches the documented expectation: only
+`full` mode benefits from SA's `M_COVER`/hard-forbidden handling, so only
+`full` is guaranteed H2-clean; `milp`/`fo` can carry nonzero `S1_coverage`
+when CBC's own soft-S1 term doesn't drive it to 0 in the time limit. All
+three modes were H3-clean on this instance (no forbidden-succession
+violations even pre-SA) — expected, since forbidden successions are a
+hard constraint already enforced by the MILP formulation itself, not a
+soft term SA needs to repair.
+
+### Cross-check vs `run_4week_full_pipeline.py`
+
+```
+python3 run_4week_full_pipeline.py --instance n005w4 --weeks 0 1 2 3 --history 0
+```
+
+prints `TOTAL INRC-II = 240` for the same instance — **exact match** (not
+just within-1) against `run_ablation.py`'s `full`-mode `total_inrc2_cost`.
+Per-week `milp_obj`/`post_fo_obj` from that script are **not** directly
+comparable to `run_ablation.py`'s `milp`/`fo`-mode `total_inrc2_cost`
+(550/460): those are CBC's internal PuLP objective values (solver-scale,
+includes look-ahead terms S6\*/S7\*/S10\* proportional budgets), whereas
+`run_ablation.py` always reports `penalty_evaluator.evaluate()`'s
+S1–S4 score, consistent across all three modes — by design, so MILP/FO/SA
+are compared on one common scale. `run_4week_full_pipeline.py` itself
+never evaluates the raw MILP or post-F&O schedule with
+`penalty_evaluator.evaluate()` (only the final SA output), so there is no
+existing reference number for the `milp`/`fo` modes beyond the
+monotonicity check above — which passed.
+
+### Known limitations
+
+- SA seed remains hardcoded (`std::mt19937 rng(42)`,
+  `inner_heuristic/src/heuristic.cpp:649`) — out of scope per Scope Lock
+  Decision 3, unchanged in this segment.
+- `milp`/`fo`-mode `total_inrc2_cost` is not directly comparable to any
+  number `run_4week_full_pipeline.py` prints (see cross-check note above);
+  only `full`-mode is cross-checked against an independent script.
+- `--mode milp`/`fo` are not expected to be H2-clean — this is inherent
+  to the MILP/F&O formulation (soft coverage term), not a runner bug.
+
+### Smoke test verdict
+
+3/3 modes produce valid JSON, monotonicity holds, `full` is H2/H3-clean,
+and the `full`-mode total matches the independent reference script
+exactly. No divergence from the locked architecture. Proceeding to commit.
