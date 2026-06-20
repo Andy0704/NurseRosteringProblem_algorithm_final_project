@@ -1,5 +1,5 @@
 data/exchange/pipeline_bench.json
 data/exchange/ablation_bench.json
 session_snapshot/
-results/*.json
+results/**/*.json
 !results/.gitkeep
